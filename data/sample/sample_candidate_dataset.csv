@@ -1,0 +1,5 @@
+candidate_id,name,email,skills,experience,education,summary,resume_text
+candidate_001,John Doe,john.doe@email.com,Python, Machine Learning, TensorFlow, PostgreSQL,5 years as Software Engineer at various tech companies,Master's in Computer Science,Experienced software engineer specializing in Python and ML applications. Strong background in building scalable systems.,Full resume text would go here with detailed work history and projects.
+candidate_002,Jane Smith,jane.smith@email.com,Python, SQL, Statistics, Machine Learning, Pandas,3 years as Data Analyst, 2 years as Data Scientist,Master's in Data Science,Data scientist with expertise in statistical analysis and predictive modeling. Proficient in Python and SQL.,Full resume text would go here with detailed work history and projects.
+candidate_003,Bob Johnson,bob.johnson@email.com,React, Node.js, JavaScript, TypeScript,4 years as Full Stack Developer,Bachelor's in Computer Science,Full stack developer with extensive experience in modern web technologies. Strong in React and Node.js development.,Full resume text would go here with detailed work history and projects.
+

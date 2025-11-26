@@ -1,0 +1,32 @@
+{
+  "dataset_type": "candidate",
+  "overall_valid": false,
+  "structure": {
+    "is_valid": false,
+    "errors": [
+      "Missing required columns: ['candidate_id']"
+    ],
+    "warnings": [
+      "Unexpected columns found: ['JobID', 'URL Job', 'Job Title', 'Name Company', 'Company Overview', 'Company Size', 'Company Address', 'Job Description', 'Job Requirements', 'Benefits', 'Job Address', 'Job Type', 'Gender', 'Number Cadidate', 'Career Level', 'Years of Experience', 'Salary', 'Submission Deadline', 'Industry', 'company_id']"
+    ],
+    "stats": {
+      "total_rows": 14634,
+      "total_columns": 20
+    }
+  },
+  "quality": {
+    "is_valid": true,
+    "errors": [],
+    "warnings": [],
+    "quality_metrics": {}
+  },
+  "completeness": {
+    "is_valid": true,
+    "warnings": [],
+    "completeness_scores": {}
+  },
+  "summary": {
+    "total_errors": 1,
+    "total_warnings": 1
+  }
+}

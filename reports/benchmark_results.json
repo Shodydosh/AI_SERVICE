@@ -1,0 +1,86 @@
+{
+  "embedding_quality": {
+    "baseline": {
+      "method": "baseline",
+      "num_embeddings": 2,
+      "generation_time": 0.11455726623535156,
+      "embeddings_per_second": 17.458517174206225,
+      "norm_mean": 1.0000000402709923,
+      "norm_std": 1.8535650792020901e-10,
+      "norm_min": 1.0000000400856357,
+      "norm_max": 1.0000000404563487,
+      "similarity_mean": 0.6585048902686668,
+      "similarity_std": 0.0,
+      "similarity_min": 0.6585048902686668,
+      "similarity_max": 0.6585048902686668,
+      "similarity_median": 0.6585048902686668,
+      "similarity_q25": 0.6585048902686668,
+      "similarity_q75": 0.6585048902686668
+    },
+    "improved_weighted_concat": {
+      "method": "improved_weighted_concat",
+      "num_embeddings": 2,
+      "generation_time": 0.09241199493408203,
+      "embeddings_per_second": 21.642212154673327,
+      "norm_mean": 1.0000000383690835,
+      "norm_std": 6.5298449980488735e-09,
+      "norm_min": 1.0000000318392384,
+      "norm_max": 1.0000000448989284,
+      "similarity_mean": 0.7005991974589567,
+      "similarity_std": 0.0,
+      "similarity_min": 0.7005991974589567,
+      "similarity_max": 0.7005991974589567,
+      "similarity_median": 0.7005991974589567,
+      "similarity_q25": 0.7005991974589567,
+      "similarity_q75": 0.7005991974589567
+    },
+    "improved_attention": {
+      "method": "improved_attention",
+      "num_embeddings": 2,
+      "generation_time": 0.09064078330993652,
+      "embeddings_per_second": 22.065122640889065,
+      "norm_mean": 1.0000000383690835,
+      "norm_std": 6.5298449980488735e-09,
+      "norm_min": 1.0000000318392384,
+      "norm_max": 1.0000000448989284,
+      "similarity_mean": 0.7005991974589567,
+      "similarity_std": 0.0,
+      "similarity_min": 0.7005991974589567,
+      "similarity_max": 0.7005991974589567,
+      "similarity_median": 0.7005991974589567,
+      "similarity_q25": 0.7005991974589567,
+      "similarity_q75": 0.7005991974589567
+    },
+    "advanced": {
+      "method": "advanced",
+      "num_embeddings": 2,
+      "generation_time": 0.15482401847839355,
+      "embeddings_per_second": 12.917892324821098,
+      "norm_mean": 0.9999999998558482,
+      "norm_std": 2.5730193253803435e-08,
+      "norm_min": 0.999999974125655,
+      "norm_max": 1.0000000255860415,
+      "similarity_mean": 0.5857302196846981,
+      "similarity_std": 0.0,
+      "similarity_min": 0.5857302196846981,
+      "similarity_max": 0.5857302196846981,
+      "similarity_median": 0.5857302196846981,
+      "similarity_q25": 0.5857302196846981,
+      "similarity_q75": 0.5857302196846981
+    }
+  },
+  "performance": {},
+  "matching_quality": {},
+  "field_extraction": {
+    "total_samples": 100,
+    "successful_extractions": 0,
+    "fields_found": {
+      "skills": 0,
+      "experience": 0,
+      "desired_job": 0
+    },
+    "fallback_used": 0,
+    "empty_extractions": 100,
+    "success_rate": 0.0
+  }
+}

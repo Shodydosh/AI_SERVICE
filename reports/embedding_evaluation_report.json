@@ -1,0 +1,65 @@
+{
+  "evaluation_date": "2025-11-24T13:41:29.963027",
+  "methods": [
+    {
+      "method_id": 1,
+      "method_name": "Baseline_SimCSE",
+      "metrics": {
+        "avg_search_time_ms": 0.0,
+        "avg_similarity_score": 0.0,
+        "similarity_std": 0.0,
+        "high_similarity_coverage": 0.0,
+        "test_samples": 0
+      }
+    },
+    {
+      "method_id": 2,
+      "method_name": "Weighted_Embeddings",
+      "metrics": {
+        "avg_search_time_ms": 0.0,
+        "avg_similarity_score": 0.0,
+        "similarity_std": 0.0,
+        "high_similarity_coverage": 0.0,
+        "test_samples": 0
+      }
+    },
+    {
+      "method_id": 3,
+      "method_name": "Field_Specific",
+      "metrics": {
+        "avg_search_time_ms": 0.0,
+        "avg_similarity_score": 0.0,
+        "similarity_std": 0.0,
+        "high_similarity_coverage": 0.0,
+        "test_samples": 0
+      }
+    },
+    {
+      "method_id": 4,
+      "method_name": "Multi_Vector",
+      "metrics": {
+        "avg_search_time_ms": 0.0,
+        "avg_similarity_score": 0.0,
+        "similarity_std": 0.0,
+        "high_similarity_coverage": 0.0,
+        "test_samples": 0
+      }
+    },
+    {
+      "method_id": 5,
+      "method_name": "Ensemble",
+      "metrics": {
+        "avg_search_time_ms": 0.0,
+        "avg_similarity_score": 0.0,
+        "similarity_std": 0.0,
+        "high_similarity_coverage": 0.0,
+        "test_samples": 0
+      }
+    }
+  ],
+  "summary": {
+    "best_method": "Baseline_SimCSE",
+    "best_method_id": 1,
+    "best_avg_similarity": 0.0
+  }
+}

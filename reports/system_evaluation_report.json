@@ -1,0 +1,85 @@
+{
+  "database": {
+    "connection": true,
+    "tables": {},
+    "data_counts": {
+      "job_descriptions": 14634,
+      "candidates": 0,
+      "precomputed_recommendations": 0,
+      "evaluation_jd": 2500,
+      "evaluation_candidates": 0
+    },
+    "health": "partial"
+  },
+  "embeddings": {
+    "jd_embeddings": {
+      "dimension": 768,
+      "non_zero_count": 768,
+      "sample_id": "9033"
+    },
+    "candidate_embeddings": {},
+    "dimension_check": true
+  },
+  "faiss": {
+    "jd_index": {
+      "exists": true,
+      "loaded": false
+    },
+    "candidate_index": {
+      "exists": true,
+      "loaded": false
+    }
+  },
+  "precomputed": {
+    "total_recommendations": 0,
+    "unique_candidates": 0,
+    "avg_recommendations_per_candidate": 0,
+    "sample_quality": {}
+  },
+  "evaluation_embeddings": {
+    "methods": {
+      "1": {
+        "name": "Baseline_SimCSE",
+        "jd_count": 500,
+        "candidate_count": 0
+      },
+      "2": {
+        "name": "Weighted_Embeddings",
+        "jd_count": 500,
+        "candidate_count": 0
+      },
+      "3": {
+        "name": "Field_Specific",
+        "jd_count": 500,
+        "candidate_count": 0
+      },
+      "4": {
+        "name": "Multi_Vector",
+        "jd_count": 500,
+        "candidate_count": 0
+      },
+      "5": {
+        "name": "Ensemble",
+        "jd_count": 500,
+        "candidate_count": 0
+      }
+    },
+    "total_jd_embeddings": 2500,
+    "total_candidate_embeddings": 0
+  },
+  "summary": {
+    "overall_status": "partial",
+    "components": {
+      "database": "partial",
+      "embeddings": "partial",
+      "faiss": "partial",
+      "precomputed": "missing"
+    },
+    "recommendations": [
+      "Generate candidate embeddings",
+      "Build candidate FAISS index",
+      "Run pre-computation for recommendations"
+    ]
+  },
+  "evaluation_date": "2025-11-24T15:56:46.356153"
+}

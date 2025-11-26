@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Job Recommendation Service</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: #f5f5f5;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+        }
+
+        .tab:hover {
+            background: #e8e8e8;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-section {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .results-header {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .results-header h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .results-count {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .job-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .job-card {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: box-shadow 0.3s;
+        }
+
+        .job-card:hover {
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .job-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .job-company {
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .job-location {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .similarity-score {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .job-description {
+            color: #555;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        .job-requirements {
+            color: #666;
+            margin-top: 10px;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .info-box p {
+            color: #1976d2;
+            margin: 0;
+        }
+
+        .candidate-select-info {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .candidate-select-info p {
+            color: #856404;
+            margin: 0;
+        }
+
+        .candidate-details {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .candidate-details h3 {
+            margin-bottom: 12px;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .candidate-details p {
+            margin: 6px 0;
+            color: #555;
+            font-size: 0.95em;
+        }
+
+        .candidate-details strong {
+            color: #333;
+            min-width: 80px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Job Recommendation Service</h1>
+            <p>Find the top 15 most suitable jobs for your profile</p>
+        </div>
+
+        <div class="content">
+            <div class="tabs">
+                <button class="tab active" data-tab="processed">📋 Processed Candidate</button>
+                <button class="tab" data-tab="new">➕ New Candidate</button>
+            </div>
+
+            <!-- Processed Candidate Tab -->
+            <div id="processedTab" class="tab-content active">
+                <div class="candidate-select-info">
+                    <p><strong>ℹ️</strong> Select a candidate from database. Vector retrieved from PostgreSQL. Check server console for details.</p>
+                </div>
+
+                <form id="processedCandidateForm">
+                    <div class="form-group">
+                        <label for="candidateSelect">Select Candidate *</label>
+                        <select id="candidateSelect" name="candidate_id" required>
+                            <option value="">Loading candidates...</option>
+                        </select>
+                    </div>
+
+                    <div class="candidate-details" id="candidateDetails" style="display: none;">
+                        <h3>Candidate Details</h3>
+                        <p><strong>ID:</strong> <span id="detailId">-</span></p>
+                        <p><strong>Name:</strong> <span id="detailName">-</span></p>
+                        <p><strong>Email:</strong> <span id="detailEmail">-</span></p>
+                        <p><strong>Skills:</strong> <span id="detailSkills">-</span></p>
+                    </div>
+
+                    <button type="submit" class="btn" id="submitProcessedBtn">
+                        🔍 Find Top 15 Jobs
+                    </button>
+                </form>
+            </div>
+
+            <!-- New Candidate Tab -->
+            <div id="newTab" class="tab-content">
+                <div class="info-box">
+                    <p><strong>💡</strong> Fill at least one field. Text will be embedded, then matched using PostgreSQL vectors. Check server console for details.</p>
+                </div>
+
+                <form id="newCandidateForm">
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Name (Optional)</label>
+                                <input type="text" id="name" name="name" placeholder="Your name">
+                            </div>
+                            <div class="form-group">
+                                <label for="education">Education (Optional)</label>
+                                <input type="text" id="education" name="education" placeholder="e.g., Bachelor's in Computer Science">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="skills">Skills *</label>
+                            <textarea id="skills" name="skills" placeholder="e.g., Python, JavaScript, React, Machine Learning, Data Analysis" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="experience">Work Experience *</label>
+                            <textarea id="experience" name="experience" placeholder="e.g., 5 years as Software Engineer, worked on web applications, mobile apps" required></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="summary">Professional Summary (Optional)</label>
+                            <textarea id="summary" name="summary" placeholder="Brief summary of your professional background and career goals"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="resume_text">Full Resume Text (Optional)</label>
+                            <textarea id="resume_text" name="resume_text" placeholder="Paste your complete resume text here"></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn" id="submitNewBtn">
+                        🔍 Find Top 15 Jobs
+                    </button>
+                </form>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 15px; color: #666;">Finding the best job matches for you...</p>
+            </div>
+
+            <div class="error" id="error"></div>
+
+            <div class="results-section" id="results">
+                <div class="results-header">
+                    <h2>🎯 Job Recommendations</h2>
+                    <div class="results-count" id="resultsCount"></div>
+                </div>
+                <div class="job-list" id="jobList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                
+                // Remove active class from all tabs and contents
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(tc => tc.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                document.getElementById(targetTab + 'Tab').classList.add('active');
+            });
+        });
+
+        // Load candidates list
+        async function loadCandidates() {
+            try {
+                const response = await fetch(window.location.origin + '/api/v1/candidates');
+                const data = await response.json();
+                
+                const select = document.getElementById('candidateSelect');
+                select.innerHTML = '<option value="">Select a candidate...</option>';
+                
+                data.candidates.forEach(candidate => {
+                    const option = document.createElement('option');
+                    option.value = candidate.candidate_id;
+                    option.textContent = `${candidate.candidate_id}${candidate.name ? ' - ' + candidate.name : ''}${candidate.email ? ' (' + candidate.email + ')' : ''}`;
+                    option.dataset.candidate = JSON.stringify(candidate);
+                    select.appendChild(option);
+                });
+            } catch (err) {
+                document.getElementById('candidateSelect').innerHTML = '<option value="">Error loading candidates</option>';
+                console.error('Error loading candidates:', err);
+            }
+        }
+
+        // Show candidate details when selected
+        document.getElementById('candidateSelect').addEventListener('change', async (e) => {
+            const option = e.target.selectedOptions[0];
+            if (option.value) {
+                const candidateId = option.value;
+                
+                // Fetch full candidate details from API
+                try {
+                    const response = await fetch(window.location.origin + `/api/v1/candidates/${encodeURIComponent(candidateId)}`);
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch candidate details');
+                    }
+                    const candidate = await response.json();
+                    
+                    // Safely handle null/undefined values - use helper function
+                    function safeText(value) {
+                        if (value === null || value === undefined || value === 'null' || value === 'undefined') {
+                            return '-';
+                        }
+                        const str = String(value).trim();
+                        return str === '' ? '-' : str;
+                    }
+                    
+                    document.getElementById('detailId').textContent = safeText(candidate.candidate_id);
+                    document.getElementById('detailName').textContent = safeText(candidate.name);
+                    document.getElementById('detailEmail').textContent = safeText(candidate.email);
+                    document.getElementById('detailSkills').textContent = safeText(candidate.skills);
+                    
+                    document.getElementById('candidateDetails').style.display = 'block';
+                } catch (err) {
+                    console.error('Error loading candidate details:', err);
+                    // Fallback to option data
+                    try {
+                        const candidate = JSON.parse(option.dataset.candidate || '{}');
+                        
+                        function safeText(value) {
+                            if (value === null || value === undefined || value === 'null' || value === 'undefined') {
+                                return '-';
+                            }
+                            const str = String(value).trim();
+                            return str === '' ? '-' : str;
+                        }
+                        
+                        document.getElementById('detailId').textContent = safeText(candidate.candidate_id);
+                        document.getElementById('detailName').textContent = safeText(candidate.name);
+                        document.getElementById('detailEmail').textContent = safeText(candidate.email);
+                        document.getElementById('detailSkills').textContent = safeText(candidate.skills);
+                        
+                        document.getElementById('candidateDetails').style.display = 'block';
+                    } catch (parseErr) {
+                        console.error('Error parsing candidate data:', parseErr);
+                        document.getElementById('detailId').textContent = candidateId;
+                        document.getElementById('detailName').textContent = 'Error loading';
+                        document.getElementById('detailEmail').textContent = '-';
+                        document.getElementById('detailSkills').textContent = '-';
+                        document.getElementById('candidateDetails').style.display = 'block';
+                    }
+                }
+            } else {
+                document.getElementById('candidateDetails').style.display = 'none';
+            }
+        });
+
+        // Processed candidate form
+        document.getElementById('processedCandidateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const candidateId = document.getElementById('candidateSelect').value;
+            if (!candidateId) {
+                showError('Please select a candidate');
+                return;
+            }
+
+            hideResultsAndErrors();
+            showLoading();
+            document.getElementById('submitProcessedBtn').disabled = true;
+
+            try {
+                const apiUrl = window.location.origin + '/api/v1/match/candidate-id';
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        candidate_id: candidateId,
+                        limit: 15
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'An error occurred');
+                }
+
+                displayResults(data);
+
+            } catch (err) {
+                showError(err.message || 'Failed to fetch job recommendations. Please try again.');
+            } finally {
+                hideLoading();
+                document.getElementById('submitProcessedBtn').disabled = false;
+            }
+        });
+
+        // New candidate form
+        document.getElementById('newCandidateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('name').value.trim() || null,
+                skills: document.getElementById('skills').value.trim() || null,
+                experience: document.getElementById('experience').value.trim() || null,
+                education: document.getElementById('education').value.trim() || null,
+                summary: document.getElementById('summary').value.trim() || null,
+                resume_text: document.getElementById('resume_text').value.trim() || null,
+                limit: 15
+            };
+
+            if (!formData.skills && !formData.experience && !formData.summary && 
+                !formData.education && !formData.resume_text) {
+                showError('Please fill in at least one field (Skills, Experience, Summary, Education, or Resume Text)');
+                return;
+            }
+
+            hideResultsAndErrors();
+            showLoading();
+            document.getElementById('submitNewBtn').disabled = true;
+
+            try {
+                const apiUrl = window.location.origin + '/api/v1/match/candidate';
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || 'An error occurred');
+                }
+
+                displayResults(data);
+
+            } catch (err) {
+                showError(err.message || 'Failed to fetch job recommendations. Please try again.');
+            } finally {
+                hideLoading();
+                document.getElementById('submitNewBtn').disabled = false;
+            }
+        });
+
+        function displayResults(data) {
+            document.getElementById('resultsCount').textContent = `Found ${data.total_matches.toLocaleString()} matching jobs`;
+            
+            if (data.matches && data.matches.length > 0) {
+                document.getElementById('jobList').innerHTML = data.matches.map((job, index) => `
+                    <div class="job-card">
+                        <div class="job-header">
+                            <div>
+                                <div class="job-title">${index + 1}. ${escapeHtml(job.title)}</div>
+                                ${job.company ? `<div class="job-company">${escapeHtml(job.company)}</div>` : ''}
+                                ${job.location ? `<div class="job-location">📍 ${escapeHtml(job.location)}</div>` : ''}
+                            </div>
+                            <div class="similarity-score">
+                                ${(job.similarity_score * 100).toFixed(1)}% Match
+                            </div>
+                        </div>
+                        ${job.description ? `<div class="job-description">${escapeHtml(job.description)}</div>` : ''}
+                        ${job.requirements ? `<div class="job-requirements"><strong>Requirements:</strong> ${escapeHtml(job.requirements)}</div>` : ''}
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('jobList').innerHTML = '<p>No jobs found. Try adjusting your search criteria.</p>';
+            }
+
+            document.getElementById('results').classList.add('active');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function showError(message) {
+            document.getElementById('error').textContent = `Error: ${message}`;
+            document.getElementById('error').classList.add('active');
+        }
+
+        function hideResultsAndErrors() {
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('error').classList.remove('active');
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.remove('active');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Load candidates on page load
+        loadCandidates();
+    </script>
+</body>
+</html>

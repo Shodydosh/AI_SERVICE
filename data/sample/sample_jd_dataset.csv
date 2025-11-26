@@ -1,0 +1,5 @@
+job_id,title,company,description,requirements,location,skills
+job_001,Senior Software Engineer,Tech Corp,We are looking for a senior software engineer with experience in Python and machine learning. The role involves developing AI-powered applications and working with large datasets.,5+ years of experience in software development, Python proficiency, ML experience,San Francisco,CA,Python, Machine Learning, TensorFlow, PostgreSQL
+job_002,Data Scientist,Data Analytics Inc,Join our data science team to build predictive models and analyze large datasets. Experience with statistical analysis and ML algorithms required.,Master's degree in Data Science or related field, 3+ years experience, Python, SQL,New York,NY,Python, SQL, Statistics, Machine Learning, Pandas
+job_003,Full Stack Developer,Web Solutions,We need a full stack developer to build and maintain web applications. Experience with React and Node.js is essential.,Bachelor's degree, 2+ years experience, React, Node.js, JavaScript,Remote,React, Node.js, JavaScript, TypeScript, REST APIs
+

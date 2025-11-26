@@ -1,0 +1,5 @@
+# Place your JD and candidate datasets here
+# Expected formats:
+# - CSV files with columns: job_id, title, description (for JD dataset)
+# - CSV files with columns: candidate_id, skills, experience, etc. (for candidate dataset)
+
