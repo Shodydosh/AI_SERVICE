@@ -13,6 +13,11 @@ from datetime import datetime
 from pathlib import Path
 
 from src.embeddings.model_variations import get_variation, list_all_variations
+from src.embeddings.parameter_variations import (
+    generate_all_variations, 
+    get_variation_by_id as get_param_variation,
+    list_all_variations as list_param_variations
+)
 from src.database.connection import get_db_session
 from src.database.models import JobDescriptionEmbedding, CandidateEmbedding
 from src.vector_search.faiss_manager import FAISSManager
@@ -235,12 +240,24 @@ class ModelVariationBenchmark:
             'memory_after_mb': memory_after
         }
     
-    def run_benchmark(self, variation_ids: List[int] = None):
+    def run_benchmark(self, variation_ids: List[int] = None, use_parameter_variations: bool = True):
         """Run comprehensive benchmark for all or specified variations."""
-        if variation_ids is None:
-            variation_ids = list(range(1, 11))
-        
-        logger.info(f"Starting benchmark for {len(variation_ids)} variations...")
+        # Determine which variation system to use
+        if use_parameter_variations:
+            # Use parameter variations (5 per model)
+            all_variations = generate_all_variations()
+            if variation_ids is None:
+                variation_ids = list(range(1, len(all_variations) + 1))
+            logger.info(f"Starting benchmark for {len(variation_ids)} parameter variations...")
+            get_var_func = get_param_variation
+            var_type = "Parameter Variation"
+        else:
+            # Use original variations (10 total)
+            if variation_ids is None:
+                variation_ids = list(range(1, 11))
+            logger.info(f"Starting benchmark for {len(variation_ids)} variations...")
+            get_var_func = get_variation
+            var_type = "Variation"
         
         # Load test data
         jd_data, candidate_data = self.load_test_data()
@@ -254,10 +271,10 @@ class ModelVariationBenchmark:
         for var_id in variation_ids:
             try:
                 logger.info(f"\n{'='*80}")
-                logger.info(f"Benchmarking Variation {var_id}...")
+                logger.info(f"Benchmarking {var_type} {var_id}...")
                 logger.info(f"{'='*80}")
                 
-                variation = get_variation(var_id)
+                variation = get_var_func(var_id)
                 
                 # Run benchmarks
                 embedding_metrics = self.benchmark_embedding_generation(
@@ -406,11 +423,20 @@ def main():
                        help='Number of samples to use for testing')
     parser.add_argument('--variations', type=int, nargs='+', default=None,
                        help='Specific variation IDs to benchmark (default: all)')
+    parser.add_argument('--use-param-variations', action='store_true', default=True,
+                       help='Use parameter variations (5 per model) instead of original 10 variations')
+    parser.add_argument('--use-original', action='store_true', default=False,
+                       help='Use original 10 variations instead of parameter variations')
     
     args = parser.parse_args()
     
+    use_param = args.use_param_variations and not args.use_original
+    
     benchmark = ModelVariationBenchmark(test_sample_size=args.sample_size)
-    benchmark.run_benchmark(variation_ids=args.variations)
+    benchmark.run_benchmark(
+        variation_ids=args.variations,
+        use_parameter_variations=use_param
+    )
 
 
 if __name__ == "__main__":
