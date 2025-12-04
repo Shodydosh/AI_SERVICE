@@ -1,6 +1,6 @@
-"""Cross-encoder re-ranking service for 90%+ similarity."""
+"""Reranking Service với Cross-Encoder model."""
+from typing import List, Dict, Tuple, Optional
 import logging
-from typing import List, Dict, Tuple
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -8,142 +8,204 @@ logger = logging.getLogger(__name__)
 
 class RerankingService:
     """
-    Re-ranking service using cross-encoder for 90%+ similarity.
-    Uses a two-stage approach: bi-encoder (fast) + cross-encoder (accurate).
+    Reranking Service sử dụng Cross-Encoder để rerank kết quả từ FAISS.
+    
+    Cross-Encoder tốt hơn Bi-Encoder cho reranking vì:
+    - Xem xét cả query và candidate cùng lúc
+    - Chính xác hơn nhưng chậm hơn
+    - Phù hợp cho reranking top 100-1000 results
     """
     
-    def __init__(self, use_cross_encoder: bool = False):
+    def __init__(
+        self,
+        model_name: Optional[str] = None,
+        use_cross_encoder: bool = True,
+        top_k_rerank: int = 100
+    ):
         """
-        Initialize re-ranking service.
+        Initialize reranking service.
         
         Args:
-            use_cross_encoder: Whether to use cross-encoder (slower but more accurate)
+            model_name: Cross-encoder model name (default: use sentence-transformers cross-encoder)
+            use_cross_encoder: Whether to use cross-encoder (if False, use simple weighted reranking)
+            top_k_rerank: Number of candidates to rerank (rerank top N from FAISS)
         """
         self.use_cross_encoder = use_cross_encoder
-        self.cross_encoder_model = None
+        self.top_k_rerank = top_k_rerank
+        self.model = None
         
         if use_cross_encoder:
             try:
                 from sentence_transformers import CrossEncoder
-                # Use multilingual cross-encoder for Vietnamese
-                self.cross_encoder_model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
-                logger.info("Cross-encoder model loaded for re-ranking")
-            except Exception as e:
-                logger.warning(f"Could not load cross-encoder: {e}. Using bi-encoder only.")
+                # Use Vietnamese cross-encoder if available, else use multilingual
+                self.model_name = model_name or "cross-encoder/ms-marco-MiniLM-L-6-v2"
+                self.model = CrossEncoder(self.model_name)
+                logger.info(f"RerankingService initialized with cross-encoder: {self.model_name}")
+            except ImportError:
+                logger.warning("sentence-transformers not available, falling back to weighted reranking")
                 self.use_cross_encoder = False
+        else:
+            logger.info("RerankingService initialized with weighted reranking (no cross-encoder)")
     
-    def rerank_matches(
+    def rerank_with_cross_encoder(
         self,
         query_text: str,
-        candidate_texts: List[str],
-        initial_scores: List[float],
-        top_k: int = 15
-    ) -> List[Tuple[int, float]]:
+        candidates: List[Dict],
+        top_k: int = 10
+    ) -> List[Tuple[str, float]]:
         """
-        Re-rank matches using cross-encoder for better accuracy.
+        Rerank candidates sử dụng cross-encoder.
         
         Args:
-            query_text: Query text (candidate profile)
-            candidate_texts: List of candidate texts (job descriptions)
-            initial_scores: Initial similarity scores from bi-encoder
-            top_k: Number of top results to re-rank
-        
+            query_text: Query text (e.g., candidate desired job + skills)
+            candidates: List of candidate dicts with 'text' or 'title' + 'description'
+            top_k: Number of top results to return
+            
         Returns:
-            List of (index, score) tuples sorted by score (descending)
+            List of (candidate_id, reranked_score) tuples
         """
-        if not self.use_cross_encoder or not self.cross_encoder_model:
-            # Fallback: use initial scores
-            indexed_scores = [(i, score) for i, score in enumerate(initial_scores)]
-            indexed_scores.sort(key=lambda x: x[1], reverse=True)
-            return indexed_scores[:top_k]
+        if not self.model or not self.use_cross_encoder:
+            # Fallback to weighted reranking
+            return self.rerank_weighted(candidates, top_k)
         
-        # Get top K candidates for re-ranking
-        indexed_scores = [(i, score) for i, score in enumerate(initial_scores)]
-        indexed_scores.sort(key=lambda x: x[1], reverse=True)
-        top_indices = [idx for idx, _ in indexed_scores[:top_k]]
+        # Prepare pairs for cross-encoder
+        pairs = []
+        candidate_ids = []
         
-        # Create pairs for cross-encoder
-        pairs = [(query_text, candidate_texts[idx]) for idx in top_indices]
+        for candidate in candidates:
+            candidate_id = candidate.get('id') or candidate.get('job_id') or candidate.get('candidate_id')
+            if not candidate_id:
+                continue
+            
+            # Combine candidate text fields
+            candidate_text = self._get_candidate_text(candidate)
+            if not candidate_text:
+                continue
+            
+            pairs.append([query_text, candidate_text])
+            candidate_ids.append(candidate_id)
         
-        # Get cross-encoder scores
+        if not pairs:
+            return []
+        
+        # Get scores from cross-encoder
         try:
-            cross_scores = self.cross_encoder_model.predict(pairs)
-            
-            # Combine with initial scores (weighted average)
-            # Cross-encoder is more accurate, so give it higher weight
-            # Increased cross-encoder weight for maximum similarity boost
-            reranked = []
-            for i, idx in enumerate(top_indices):
-                initial_score = initial_scores[idx]
-                cross_score = float(cross_scores[i])
-                # Weighted average: 80% cross-encoder, 20% bi-encoder (boosted for max similarity)
-                final_score = 0.8 * cross_score + 0.2 * initial_score
-                reranked.append((idx, final_score))
-            
-            # Sort by final score
-            reranked.sort(key=lambda x: x[1], reverse=True)
-            return reranked
+            scores = self.model.predict(pairs)
+            scores = scores.tolist() if hasattr(scores, 'tolist') else list(scores)
         except Exception as e:
-            logger.warning(f"Error in cross-encoder re-ranking: {e}. Using initial scores.")
-            return indexed_scores[:top_k]
+            logger.error(f"Error in cross-encoder prediction: {e}")
+            return self.rerank_weighted(candidates, top_k)
+        
+        # Combine IDs and scores
+        results = list(zip(candidate_ids, scores))
+        
+        # Sort by score (descending)
+        results.sort(key=lambda x: x[1], reverse=True)
+        
+        return results[:top_k]
     
-    def boost_exact_matches(
+    def _get_candidate_text(self, candidate: Dict) -> str:
+        """Extract text from candidate dict for reranking."""
+        parts = []
+        
+        if candidate.get('title'):
+            parts.append(f"Title: {candidate['title']}")
+        if candidate.get('description'):
+            parts.append(f"Description: {candidate['description']}")
+        if candidate.get('requirements'):
+            parts.append(f"Requirements: {candidate['requirements']}")
+        if candidate.get('skills'):
+            parts.append(f"Skills: {candidate['skills']}")
+        
+        return " | ".join(parts) if parts else ""
+    
+    def rerank_weighted(
+        self,
+        candidates: List[Dict],
+        top_k: int = 10
+    ) -> List[Tuple[str, float]]:
+        """
+        Weighted reranking (fallback khi không có cross-encoder).
+        
+        Args:
+            candidates: List of candidate dicts with similarity_score
+            top_k: Number of top results
+            
+        Returns:
+            List of (candidate_id, weighted_score) tuples
+        """
+        results = []
+        
+        for candidate in candidates:
+            candidate_id = candidate.get('id') or candidate.get('job_id') or candidate.get('candidate_id')
+            if not candidate_id:
+                continue
+            
+            # Use existing similarity_score if available
+            score = candidate.get('similarity_score', 0.0)
+            
+            # Apply weights based on field similarities
+            field_sims = candidate.get('field_similarities', {})
+            if field_sims:
+                # Weighted average: title 50%, skills 35%, experience 15%
+                title_sim = field_sims.get('title', 0.0) or 0.0
+                skills_sim = field_sims.get('skills', 0.0) or 0.0
+                exp_sim = field_sims.get('experience', 0.0) or 0.0
+                
+                weighted_score = (
+                    title_sim * 0.5 +
+                    skills_sim * 0.35 +
+                    exp_sim * 0.15
+                )
+                
+                # Combine với existing score
+                score = (score * 0.7 + weighted_score * 0.3)
+            
+            results.append((candidate_id, score))
+        
+        # Sort by score
+        results.sort(key=lambda x: x[1], reverse=True)
+        
+        return results[:top_k]
+    
+    def rerank_pipeline(
         self,
         query_text: str,
-        candidate_texts: List[str],
-        scores: List[float],
-        boost_factor: float = 1.3
-    ) -> List[float]:
+        faiss_results: List[Dict],
+        top_k: int = 10
+    ) -> List[Dict]:
         """
-        Boost scores for exact or near-exact text matches.
-        Enhanced for maximum similarity boost.
+        Full reranking pipeline: Rerank top N từ FAISS results.
         
         Args:
             query_text: Query text
-            candidate_texts: Candidate texts
-            scores: Initial similarity scores
-            boost_factor: Factor to boost exact matches (default: 1.3 = 30% boost, increased)
-        
+            faiss_results: Results từ FAISS search (top 100-1000)
+            top_k: Final number of results to return
+            
         Returns:
-            Boosted scores
+            Reranked list of candidate dicts
         """
-        boosted_scores = scores.copy()
-        query_lower = query_text.lower()
+        # Take top_k_rerank candidates for reranking
+        candidates_to_rerank = faiss_results[:self.top_k_rerank]
         
-        # Extract key skills/technologies (common job matching terms)
-        import re
-        # Common tech terms that should be matched exactly
-        tech_keywords = ['python', 'java', 'javascript', 'react', 'node', 'spring', 'tensorflow', 
-                        'pytorch', 'machine learning', 'ai', 'deep learning', 'sql', 'mongodb',
-                        'mysql', 'postgresql', 'docker', 'kubernetes', 'aws', 'azure', 'gcp']
+        # Rerank
+        if self.use_cross_encoder:
+            reranked = self.rerank_with_cross_encoder(query_text, candidates_to_rerank, top_k)
+        else:
+            reranked = self.rerank_weighted(candidates_to_rerank, top_k)
         
-        for i, candidate_text in enumerate(candidate_texts):
-            candidate_lower = candidate_text.lower()
-            
-            # Method 1: Term overlap (existing)
-            query_terms = set(query_lower.split())
-            candidate_terms = set(candidate_lower.split())
-            common_terms = query_terms & candidate_terms
-            
-            # Method 2: Tech keyword matching (enhanced)
-            tech_matches = 0
-            for keyword in tech_keywords:
-                if keyword in query_lower and keyword in candidate_lower:
-                    tech_matches += 1
-            
-            # Calculate combined overlap
-            if len(query_terms) > 0:
-                overlap_ratio = len(common_terms) / len(query_terms)
-                # Add tech keyword bonus
-                tech_bonus = min(0.2, tech_matches * 0.05)  # Max 20% bonus from tech matches
-                combined_overlap = min(1.0, overlap_ratio + tech_bonus)
-                
-                # Boost if high overlap (exact match indicators)
-                # Lower threshold (40% instead of 50%) for more aggressive boosting
-                if combined_overlap > 0.4:  # More than 40% combined overlap
-                    # Increased boost calculation for maximum similarity
-                    boost = 1.0 + (combined_overlap - 0.4) * boost_factor * 1.2
-                    boosted_scores[i] = min(1.0, scores[i] * boost)
+        # Map back to full candidate dicts
+        reranked_dict = {cand_id: score for cand_id, score in reranked}
         
-        return boosted_scores
-
+        final_results = []
+        for candidate in faiss_results:
+            candidate_id = candidate.get('id') or candidate.get('job_id') or candidate.get('candidate_id')
+            if candidate_id in reranked_dict:
+                candidate['similarity_score'] = reranked_dict[candidate_id]
+                candidate['reranked'] = True
+                final_results.append(candidate)
+        
+        # Sort by reranked score
+        final_results.sort(key=lambda x: x.get('similarity_score', 0.0), reverse=True)
+        
+        return final_results[:top_k]

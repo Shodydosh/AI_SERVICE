@@ -65,3 +65,61 @@ class ProcessedCandidateRecommendation(Base):
         Index('idx_processed_candidate_job', 'candidate_id', 'job_id', unique=True),
         Index('idx_processed_candidate_rank', 'candidate_id', 'rank'),
     )
+
+
+# ============================================================================
+# Multi-Field Embedding Models (3 separate embeddings per record)
+# ============================================================================
+
+class JobDescriptionMultiEmbedding(Base):
+    """Model for storing job description with 3 separate embeddings: title, skills, requirement."""
+    __tablename__ = "job_description_multi_embeddings"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    job_id = Column(String(100), unique=True, nullable=False, index=True)
+    title = Column(String(500), nullable=False)
+    skills = Column(Text)
+    requirement = Column(Text)  # Note: using 'requirement' (singular) to match user requirement
+    company = Column(String(200))
+    location = Column(String(200))
+    
+    # 3 separate embeddings
+    title_embedding = Column(ARRAY(Float), nullable=False)
+    skills_embedding = Column(ARRAY(Float), nullable=False)
+    requirement_embedding = Column(ARRAY(Float), nullable=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    __table_args__ = (
+        Index('idx_job_multi_title_embedding', 'title_embedding', postgresql_using='gin'),
+        Index('idx_job_multi_skills_embedding', 'skills_embedding', postgresql_using='gin'),
+        Index('idx_job_multi_requirement_embedding', 'requirement_embedding', postgresql_using='gin'),
+    )
+
+
+class CandidateMultiEmbedding(Base):
+    """Model for storing candidate with 3 separate embeddings: title (desired_job), skills, experience."""
+    __tablename__ = "candidate_multi_embeddings"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    candidate_id = Column(String(100), unique=True, nullable=False, index=True)
+    name = Column(String(200))
+    email = Column(String(200))
+    title = Column(String(500))  # desired_job or job title
+    skills = Column(Text)
+    experience = Column(Text)
+    
+    # 3 separate embeddings
+    title_embedding = Column(ARRAY(Float), nullable=False)
+    skills_embedding = Column(ARRAY(Float), nullable=False)
+    experience_embedding = Column(ARRAY(Float), nullable=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    __table_args__ = (
+        Index('idx_candidate_multi_title_embedding', 'title_embedding', postgresql_using='gin'),
+        Index('idx_candidate_multi_skills_embedding', 'skills_embedding', postgresql_using='gin'),
+        Index('idx_candidate_multi_experience_embedding', 'experience_embedding', postgresql_using='gin'),
+    )

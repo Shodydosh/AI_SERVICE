@@ -155,12 +155,67 @@ def generate_all_variations() -> List[ParameterVariation]:
     return variations
 
 
+def generate_simcse_variations_only() -> List[ParameterVariation]:
+    """Generate parameter variations CHỈ cho SimCSE_Vietnamese model."""
+    variations = []
+    variation_id = 1
+    
+    # Chỉ lấy SimCSE_Vietnamese model (model đầu tiên)
+    base_model = BASE_MODELS[0]  # SimCSE_Vietnamese
+    model_name = base_model["model_name"]
+    base_name = base_model["base_name"]
+    default_tokenization = base_model["default_tokenization"]
+    
+    for param_config in PARAMETER_VARIATIONS:
+        try:
+            variation = ParameterVariation(
+                variation_id=variation_id,
+                model_name=model_name,
+                base_name=base_name,
+                param_config=param_config,
+                default_tokenization=default_tokenization
+            )
+            variations.append(variation)
+            variation_id += 1
+        except Exception as e:
+            logger.error(f"Failed to create variation {variation_id} for {base_name}: {e}")
+            continue
+    
+    logger.info(f"Generated {len(variations)} variations for SimCSE_Vietnamese only ({len(PARAMETER_VARIATIONS)} param configs)")
+    return variations
+
+
+def get_simcse_variation_ids() -> List[int]:
+    """Lấy list variation IDs cho SimCSE_Vietnamese (chỉ 5 variations: 1-5)."""
+    return list(range(1, len(PARAMETER_VARIATIONS) + 1))
+
+
 def get_variation_by_id(variation_id: int) -> ParameterVariation:
-    """Get a specific variation by ID."""
-    all_variations = generate_all_variations()
-    if variation_id < 1 or variation_id > len(all_variations):
-        raise ValueError(f"Variation ID {variation_id} out of range (1-{len(all_variations)})")
-    return all_variations[variation_id - 1]
+    """Get a specific variation by ID - only creates the requested variation to save memory."""
+    # Calculate which model and param config this variation_id corresponds to
+    if variation_id < 1 or variation_id > len(BASE_MODELS) * len(PARAMETER_VARIATIONS):
+        total_variations = len(BASE_MODELS) * len(PARAMETER_VARIATIONS)
+        raise ValueError(f"Variation ID {variation_id} out of range (1-{total_variations})")
+    
+    # Calculate base model index and parameter index
+    variation_id_0_indexed = variation_id - 1  # Convert to 0-based
+    base_model_index = variation_id_0_indexed // len(PARAMETER_VARIATIONS)
+    param_index = variation_id_0_indexed % len(PARAMETER_VARIATIONS)
+    
+    # Get the specific base model and parameter config
+    base_model = BASE_MODELS[base_model_index]
+    param_config = PARAMETER_VARIATIONS[param_index]
+    
+    # Create only this specific variation (don't load all 50!)
+    variation = ParameterVariation(
+        variation_id=variation_id,
+        model_name=base_model["model_name"],
+        base_name=base_model["base_name"],
+        param_config=param_config,
+        default_tokenization=base_model["default_tokenization"]
+    )
+    
+    return variation
 
 
 def list_all_variations() -> List[Dict]:
@@ -186,4 +241,5 @@ def get_variations_by_model(base_name: str) -> List[ParameterVariation]:
     """Get all variations for a specific base model."""
     all_variations = generate_all_variations()
     return [v for v in all_variations if v.base_name == base_name]
+
 
