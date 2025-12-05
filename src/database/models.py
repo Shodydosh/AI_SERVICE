@@ -123,3 +123,82 @@ class CandidateMultiEmbedding(Base):
         Index('idx_candidate_multi_skills_embedding', 'skills_embedding', postgresql_using='gin'),
         Index('idx_candidate_multi_experience_embedding', 'experience_embedding', postgresql_using='gin'),
     )
+
+
+# ============================================================================
+# Two-Tower Architecture Models
+# ============================================================================
+
+class JobDescriptionTwoTower(Base):
+    """Model for storing job description with 3 separate embeddings (Job Tower)."""
+    __tablename__ = "job_description_two_tower"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    job_id = Column(String(100), unique=True, nullable=False, index=True)
+    title = Column(String(500), nullable=False)
+    skills = Column(Text)
+    requirement = Column(Text)
+    company = Column(String(200))
+    location = Column(String(200))
+    
+    # 3 separate embeddings (Job Tower)
+    title_embedding = Column(ARRAY(Float), nullable=False)
+    skills_embedding = Column(ARRAY(Float), nullable=False)
+    requirement_embedding = Column(ARRAY(Float), nullable=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    __table_args__ = (
+        Index('idx_job_tt_title_embedding', 'title_embedding', postgresql_using='gin'),
+        Index('idx_job_tt_skills_embedding', 'skills_embedding', postgresql_using='gin'),
+        Index('idx_job_tt_requirement_embedding', 'requirement_embedding', postgresql_using='gin'),
+        Index('idx_job_tt_job_id', 'job_id'),
+    )
+
+
+class CandidateTwoTower(Base):
+    """Model for storing candidate with 3 separate embeddings (Candidate Tower)."""
+    __tablename__ = "candidate_two_tower"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    candidate_id = Column(String(100), unique=True, nullable=False, index=True)
+    name = Column(String(200))
+    email = Column(String(200))
+    title = Column(String(500))  # desired job title or current job title
+    skills = Column(Text)
+    experience = Column(Text)
+    
+    # 3 separate embeddings (Candidate Tower)
+    title_embedding = Column(ARRAY(Float), nullable=False)
+    skills_embedding = Column(ARRAY(Float), nullable=False)
+    experience_embedding = Column(ARRAY(Float), nullable=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    __table_args__ = (
+        Index('idx_candidate_tt_title_embedding', 'title_embedding', postgresql_using='gin'),
+        Index('idx_candidate_tt_skills_embedding', 'skills_embedding', postgresql_using='gin'),
+        Index('idx_candidate_tt_experience_embedding', 'experience_embedding', postgresql_using='gin'),
+        Index('idx_candidate_tt_candidate_id', 'candidate_id'),
+    )
+
+
+class ReindexTracking(Base):
+    """Model for tracking reindex operations."""
+    __tablename__ = "reindex_tracking"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    reindex_type = Column(String(50), nullable=False)  # 'full', 'incremental', 'job', 'candidate'
+    status = Column(String(20), nullable=False)  # 'pending', 'running', 'completed', 'failed'
+    total_records = Column(Integer)
+    processed_records = Column(Integer, default=0)
+    started_at = Column(DateTime(timezone=True))
+    completed_at = Column(DateTime(timezone=True))
+    error_message = Column(Text)
+    metadata = Column(Text)  # JSON string
+    
+    __table_args__ = (
+        Index('idx_reindex_status', 'status', 'started_at'),
+    )
