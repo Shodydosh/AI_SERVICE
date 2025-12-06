@@ -1,8 +1,16 @@
 """Two-Tower model architecture."""
 import torch
 import torch.nn as nn
-from sentence_transformers import SentenceTransformer
 from typing import Optional, List
+import sys
+from pathlib import Path
+
+# Add src to path for embedding_loader
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+from src.utils.embedding_loader import load_embedding_model
 
 
 class Tower(nn.Module):
@@ -15,7 +23,11 @@ class Tower(nn.Module):
         dropout: float = 0.1
     ):
         super().__init__()
-        self.backbone = SentenceTransformer(model_name)
+        # Use fallback model loading
+        self.backbone, self.actual_model_name = load_embedding_model(
+            preferred_model=model_name,
+            fallback_model="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        )
         backbone_dim = self.backbone.get_sentence_embedding_dimension()
         
         self.projection = nn.Sequential(
@@ -57,6 +69,10 @@ class TwoTowerModel(nn.Module):
         self.candidate_tower = Tower(candidate_model_name, output_dim, dropout)
         self.job_tower = Tower(job_model_name, output_dim, dropout)
         self.output_dim = output_dim
+        
+        # Store actual model names used (for logging/debugging)
+        self.candidate_model_name = self.candidate_tower.actual_model_name
+        self.job_model_name = self.job_tower.actual_model_name
     
     def encode_candidates(self, texts: List[str]) -> torch.Tensor:
         """Encode candidate texts."""

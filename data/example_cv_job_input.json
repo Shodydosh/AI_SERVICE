@@ -1,0 +1,79 @@
+{
+  "cv": {
+    "title": "Senior Python Developer",
+    "skills": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL",
+      "Docker",
+      "AWS",
+      "REST APIs",
+      "Microservices"
+    ],
+    "experience": "5 years experience in Python development, building REST APIs using FastAPI, working with PostgreSQL databases, and deploying applications using Docker and AWS.",
+    "description": "Experienced Python developer with expertise in building scalable REST APIs using FastAPI framework. Strong background in database design with PostgreSQL. Proficient in containerization with Docker and cloud deployment on AWS. Experience with microservices architecture."
+  },
+  "jobs": [
+    {
+      "job_id": "job_1",
+      "title": "Senior Python Developer",
+      "requirements": "Python, FastAPI, PostgreSQL, 5+ years experience",
+      "description": "We are looking for a Senior Python Developer with extensive experience in FastAPI and PostgreSQL. The candidate should have at least 5 years of professional experience."
+    },
+    {
+      "job_id": "job_2",
+      "title": "Backend Engineer",
+      "requirements": "Python, REST APIs, Microservices, Docker",
+      "description": "Backend engineer position requiring strong Python skills, experience with REST API development, microservices architecture, and containerization with Docker."
+    },
+    {
+      "job_id": "job_3",
+      "title": "Data Engineer",
+      "requirements": "Spark, Hadoop, Airflow, Python",
+      "description": "Data engineering role focusing on big data technologies including Spark, Hadoop, and Airflow. Python programming skills required."
+    },
+    {
+      "job_id": "job_4",
+      "title": "Frontend Developer",
+      "requirements": "React, TypeScript, JavaScript",
+      "description": "Frontend developer position requiring React and TypeScript skills. Experience with modern JavaScript frameworks."
+    },
+    {
+      "job_id": "job_5",
+      "title": "Python Backend Developer",
+      "requirements": "Python, FastAPI, PostgreSQL, Docker, AWS",
+      "description": "Python backend developer with FastAPI and PostgreSQL experience. Knowledge of Docker and AWS cloud services required."
+    },
+    {
+      "job_id": "job_6",
+      "title": "DevOps Engineer",
+      "requirements": "Kubernetes, Docker, CI/CD, AWS",
+      "description": "DevOps engineer with container orchestration experience using Kubernetes and Docker. CI/CD pipeline experience and AWS knowledge required."
+    },
+    {
+      "job_id": "job_7",
+      "title": "Full-stack Developer",
+      "requirements": "Node.js, React, MongoDB",
+      "description": "Full-stack developer with Node.js and React experience. MongoDB database knowledge required."
+    },
+    {
+      "job_id": "job_8",
+      "title": "ML Engineer",
+      "requirements": "TensorFlow, PyTorch, Python",
+      "description": "Machine learning engineer with deep learning framework experience. Strong Python programming skills and knowledge of TensorFlow or PyTorch required."
+    },
+    {
+      "job_id": "job_9",
+      "title": "Product Manager",
+      "requirements": "Product management, Agile, Scrum",
+      "description": "Product manager role focusing on product strategy and agile methodologies. Experience with Scrum framework preferred."
+    },
+    {
+      "job_id": "job_10",
+      "title": "Software Engineer",
+      "requirements": "Python, Java, Microservices, REST APIs",
+      "description": "Software engineer with Python and Java experience in microservices architecture. REST API development experience required."
+    }
+  ]
+}
+

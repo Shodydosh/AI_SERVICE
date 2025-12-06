@@ -1,0 +1,111 @@
+
+Configuration:
+  Max Candidates: 3
+  Top K Jobs: 10
+  Output File: two_tower_precomputed_test.txt
+  Using: Precomputed embeddings from database
+
+1. Initializing Rule Matcher...
+[OK] Rule Matcher initialized
+
+2. Loading precomputed embeddings from database...
+  Loaded 44963 candidates with embeddings
+  Loaded 14634 jobs with embeddings
+  Sampling 3 candidates
+
+3. Loading job embeddings from database...
+  Loaded 14634 job embeddings from database
+  Embedding dimension: 768
+
+====================================================================================================
+PROCESSING CANDIDATES
+====================================================================================================
+
+
+####################################################################################################
+CANDIDATE 1/3
+####################################################################################################
+
+================================================================================
+CANDIDATE INFO
+================================================================================
+ID: 10126
+Name: Lưu Công Quang
+Title: Nhân Viên Kỹ Thuật Điện - Điện Lạnh
+Skills (5): ['lắp đặt điện dân dụng', 'bảo trì hệ thống điện lạnh', 'đọc bản vẽ kỹ thuật', 'an toàn lao động', 'sử dụng công cụ chuyên dụng']
+Experience: Làm Thực tập sinh Kỹ thuật Điện - Điện lạnh trong 6 tháng tại Công ty TNHH Cơ điện lạnh Đăng Khoa.  Hỗ trợ lắp đặt và bảo dưỡng các thiết bị điều hòa không khí, hệ thống điện dân dụng.  Tham gia kiểm tra, sửa chữa các lỗi cơ bản dưới sự giám sát của kỹ sư.
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Experience embedding: 768 dims
+
+================================================================================
+TOP 10 JOB RECOMMENDATIONS (Using Precomputed Embeddings)
+================================================================================
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #1
+--------------------------------------------------------------------------------
+Job ID: 7852
+Title: Nhân Viên Kỹ Thuật Điện - Điện Lạnh (Lắp Đặt - Bảo Dưỡng - Sửa Chữa)
+Company: Công ty Cổ phần đầu tư phát triển hạ tầng Thành Công
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8319
+  Rule 1 - Title Score: 0.8338 (Status: PASS)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 83.38% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Nam, có sức khỏe, nhanh nhẹn Ưu tiên có bằng Trung cấp điện /điện lạnh trở lên Gắn bó lâu dài với công ty
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #2
+--------------------------------------------------------------------------------
+Job ID: 5950
+Title: Nhân Viên Kỹ Thuật Điện, Điện Tử
+Company: CÔNG TY TNHH LIÊN DOANH DƯỢC PHẨM NUTRAMED
+Location: Bà Rịa Vũng Tàu
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8316
+  Rule 1 - Title Score: 0.9062 (Status: PASS)
+  Rule 2 - Skill Score: 2.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 90.62% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Giới tính Nam. Độ tuổi: từ 23 đến 35 tuổi.. Tốt nghiệp Cao đẳng trở lên chuyên ngành kỹ thuật : Cơ điện tử, Điện - điện tử, Tự động hóa,. Có kiến thức cơ bản về Điện/ Điện tự. Am hiểu về các thiết bị công nghiệp tự động hóa, hệ thống điều khiển tự động, biết vận hành hệ thống xử lý không khí HVAC.. Có thể đọc bảng vẽ kỹ thuật liên quan đến cơ khí, điện, điện tử.. Kinh nghiệm: Ít nhất 01 năm kinh n... (truncated, total: 503)
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #3
+--------------------------------------------------------------------------------
+Job ID: 3971
+Title: Nhân Viên Kỹ Thuật (Điện, Điện Tử)
+Company: CÔNG TY CỔ PHẦN NUTRAMED
+Location: Bà Rịa Vũng Tàu
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8281
+  Rule 1 - Title Score: 0.9062 (Status: PASS)
+  Rule 2 - Skill Score: 2.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 90.62% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Giới tính Nam. Độ tuổi: từ 23 đến 35 tuổi. Tốt nghiệp Cao đẳng trở lên chuyên ngành kỹ thuật Cơ điện tử, Điện - điện tử, Tự động hóa. Có kiến thức cơ bản về Điện/ Điện tự. Am hiểu về các thiết bị công nghiệp tự động hóa, hệ thống điều khiển tự động, biết vận hành hệ thống xử lý không khí HVAC. Có thể đọc bảng vẽ kỹ thuật liên quan đến cơ khí, điện, điện tử. Kinh nghiệm: Ít nhất 01 năm kinh nghiệm ... (truncated, total: 496)

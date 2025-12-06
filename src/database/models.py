@@ -90,11 +90,15 @@ class JobDescriptionMultiEmbedding(Base):
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    embedding_timestamp = Column(DateTime(timezone=True), server_default=func.now(), 
+                                 comment='Timestamp when embedding was last computed')
+    content_hash = Column(String(64), comment='MD5 hash of content to detect changes')
     
     __table_args__ = (
         Index('idx_job_multi_title_embedding', 'title_embedding', postgresql_using='gin'),
         Index('idx_job_multi_skills_embedding', 'skills_embedding', postgresql_using='gin'),
         Index('idx_job_multi_requirement_embedding', 'requirement_embedding', postgresql_using='gin'),
+        Index('idx_job_multi_embedding_timestamp', 'embedding_timestamp'),
     )
 
 
@@ -117,11 +121,15 @@ class CandidateMultiEmbedding(Base):
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    embedding_timestamp = Column(DateTime(timezone=True), server_default=func.now(),
+                                 comment='Timestamp when embedding was last computed')
+    content_hash = Column(String(64), comment='MD5 hash of content to detect changes')
     
     __table_args__ = (
         Index('idx_candidate_multi_title_embedding', 'title_embedding', postgresql_using='gin'),
         Index('idx_candidate_multi_skills_embedding', 'skills_embedding', postgresql_using='gin'),
         Index('idx_candidate_multi_experience_embedding', 'experience_embedding', postgresql_using='gin'),
+        Index('idx_candidate_multi_embedding_timestamp', 'embedding_timestamp'),
     )
 
 
@@ -197,7 +205,7 @@ class ReindexTracking(Base):
     started_at = Column(DateTime(timezone=True))
     completed_at = Column(DateTime(timezone=True))
     error_message = Column(Text)
-    metadata = Column(Text)  # JSON string
+    extra_metadata = Column(Text)  # JSON string (renamed from 'metadata' to avoid SQLAlchemy conflict)
     
     __table_args__ = (
         Index('idx_reindex_status', 'status', 'started_at'),

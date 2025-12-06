@@ -1,0 +1,166 @@
+================================================================================
+TWO-TOWER + RULE MATCHING DEBUG SAMPLES
+================================================================================
+
+Model Configuration:
+  Preferred Model: VoVanPhuc/sup-SimCSE-VietNamese-phobert-base
+  Fallback Model: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+
+[INFO] Output will be saved to: debug_output.txt
+
+1. Loading Two-Tower model...
+[OK] Model loaded
+   Candidate Tower Model: VoVanPhuc/sup-SimCSE-VietNamese-phobert-base
+   Job Tower Model: VoVanPhuc/sup-SimCSE-VietNamese-phobert-base
+
+2. Initializing Rule Matcher...
+[OK] Rule Matcher initialized
+   Semantic Model: VoVanPhuc/sup-SimCSE-VietNamese-phobert-base
+
+3. Loading data and computing matches...
+[OK] Computed 2500 matches
+
+================================================================================
+A. TOP 5 HIGHEST SCORE MATCHES
+================================================================================
+
+================================================================================
+=== TOP MATCH #1 ===
+================================================================================
+
+================================================================================
+=== CANDIDATE INFO ===
+================================================================================
+ID: 6759
+Name: Nguyễn Thị Lệ Thu
+Email: N/A
+
+Title (raw): Kế Toán Viên(đang Tìm Việc)
+Title Normalized: ke toan vien dang tim viec
+
+Skills (raw): ['hạch toán kế toán', 'lập báo cáo tài chính', 'sử dụng phần mềm kế toán (misa sme, Fast accounting)', 'kiểm tra chứng từ', 'kê khai thuế (vat, Tndn, Tncn)', 'thành thạo excel']
+Skills (normalized list): ['hach toan ke toan', 'lap bao cao tai chinh', 'su dung phan mem ke toan misa sme', 'fast accounting', 'kiem tra chung tu', 'ke khai thue vat', 'tndn', 'tncn', 'thanh thao excel']
+
+Experience: Thực tập sinh Kế toán tại Công ty TNHH Dịch vụ Kế toán Minh Việt trong 1.5 năm (trong thời gian học đại học). - Hỗ trợ xử lý hàng trăm chứng từ gốc, nhập liệu vào phần mềm kế toán, đảm bảo tính chính xác và kịp thời. - Tham gia hỗ trợ lập các báo cáo thuế GTGT hàng tháng, đối chiếu số liệu ngân hàng và sổ quỹ. - Nắm vững các chuẩn mực kế toán Việt Nam và quy định pháp luật liên quan.
+Education: N/A
+
+Raw JSON (first 500 chars):
+{
+  "candidate_id": "6759",
+  "name": "Nguyễn Thị Lệ Thu",
+  "email": null,
+  "title": "Kế Toán Viên(đang Tìm Việc)",
+  "skills": "['hạch toán kế toán', 'lập báo cáo tài chính', 'sử dụng phần mềm kế toán (misa sme, Fast accounting)', 'kiểm tra chứng từ', 'kê khai thuế (vat, Tndn, Tncn)', 'thành thạo excel']",
+  "experience": "Thực tập sinh Kế toán tại Công ty TNHH Dịch vụ Kế toán Minh Việt trong 1.5 năm (trong thời gian học đại học). - Hỗ trợ xử lý hàng trăm chứng từ gốc, nhập liệu vào phần mềm 
+... (JSON truncated, total length: 738)
+
+================================================================================
+=== JOB INFO ===
+================================================================================
+ID: 8918
+Title (raw): Accountant
+Title Normalized: accountant
+
+Requirements (raw): Must have a Bachelor's Degree in Accounting, Finance, or related field;+2 years experience in Accounting;Experience with budgeting and financial reporting;Advanced Microsoft Excel skills;Highly organized, with a focus on attention to detail;Strong organization and problem-solving skills;Excellent verbal and written communication skills;Intermediate - Upper Intermediate level of English (written & ... (truncated, total length: 408)
+Requirements Tokens: ['must', 'have', 'bachelor', 'degree', 'in', 'accounting', 'finance', 'or', 'related', 'field', 'years', 'experience', 'in', 'accounting', 'experience', 'with', 'budgeting', 'and', 'financial', 'reporting']...
+
+Description: N/A
+Company: CÔNG TY TNHH OUTCUBATOR VIỆT NAM
+Location: Hà Nội Tây Hồ
+Level: N/A
+Tags: N/A
+
+Raw JSON (first 500 chars):
+{
+  "job_id": "8918",
+  "title": "Accountant",
+  "company": "CÔNG TY TNHH OUTCUBATOR VIỆT NAM",
+  "location": "Hà Nội Tây Hồ",
+  "skills": "",
+  "requirement": "Must have a Bachelor's Degree in Accounting, Finance, or related field;+2 years experience in Accounting;Experience with budgeting and financial reporting;Advanced Microsoft Excel skills;Highly organized, with a focus on attention to detail;Strong organization and problem-solving skills;Excellent verbal and written communication skills;I
+... (JSON truncated, total length: 628)
+
+================================================================================
+=== MATCH METRICS ===
+================================================================================
+
+Two-Tower Similarity: 0.0983
+
+Rule 1 - Title Score:
+  Status: FAIL
+  Score: 0.6006
+  Threshold: 0.8200
+  Reasons:
+    - Final title score 60.06% < threshold 82%
+    - Candidate-only tokens: ke, viec, toan
+    - Job-only tokens: accountant
+
+  Debug Metrics:
+    Token Jaccard: 0.0000
+    Sequence Similarity: 0.2222
+    TF-IDF Similarity: 0.0000
+    Semantic Similarity: 0.6006
+
+  Token Analysis:
+    Candidate tokens: ['ke', 'viec', 'toan', 'dang', 'tim', 'vien']
+    Job tokens: ['accountant']
+    Matched tokens: []
+    Candidate-only: ['ke', 'viec', 'toan', 'dang', 'tim']
+    Job-only: ['accountant']
+
+Rule 2 - Skill Score Breakdown:
+  Status: FAIL
+  Score: 0.0000
+  Threshold: 1.2000
+  Reasons:
+    - Total skill score 0.00 < threshold 1.2
+    - Only matched 0 out of 9 skills
+    - No skills matched
+
+  Match Breakdown:
+    Exact Matches: []
+    Synonym Matches: []
+    Partial Matches: []
+    Regex/Pattern Matches: []
+    Category Matches: []
+
+Final Decision: NG
+Reason: Cả title và skill không đạt: title score 60.06% < 82%, skill score 0.00 < 1.2
+
+================================================================================
+=== TOP MATCH #2 ===
+================================================================================
+
+================================================================================
+=== CANDIDATE INFO ===
+================================================================================
+ID: 16146
+Name: Nguyễn Hữu Đạt
+Email: N/A
+
+Title (raw): Ứng Tuyển Vị Trí Warehouse Staff
+Title Normalized: ung tuyen vi tri warehouse staff
+
+Skills (raw): ['sức khỏe tốt', 'cẩn thận, Tỉ mỉ', 'nhanh nhẹn', 'tinh thần trách nhiệm', 'có thể làm việc theo ca', 'trung thực']
+Skills (normalized list): ['suc khoe tot', 'can than', 'ti mi', 'nhanh nhen', 'tinh than trach nhiem', 'co the lam viec theo ca', 'trung thuc']
+
+Experience: Em chưa có kinh nghiệm làm việc chính thức trong kho hàng. Em có kinh nghiệm làm thêm các công việc lao động phổ thông như bưng bê, phụ việc tại quán ăn.
+Education: N/A
+
+Raw JSON (first 500 chars):
+{
+  "candidate_id": "16146",
+  "name": "Nguyễn Hữu Đạt",
+  "email": null,
+  "title": "Ứng Tuyển Vị Trí Warehouse Staff",
+  "skills": "['sức khỏe tốt', 'cẩn thận, Tỉ mỉ', 'nhanh nhẹn', 'tinh thần trách nhiệm', 'có thể làm việc theo ca', 'trung thực']",
+  "experience": "Em chưa có kinh nghiệm làm việc chính thức trong kho hàng. Em có kinh nghiệm làm thêm các công việc lao động phổ thông như bưng bê, phụ việc tại quán ăn.",
+  "education": null
+}
+
+================================================================================
+=== JOB INFO ===
+================================================================================
+ID: 8918
+Title (raw): Accountant
+Title Normalized: accountant

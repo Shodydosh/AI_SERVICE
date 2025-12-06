@@ -1,9 +1,10 @@
 """Job Tower Encoder - encodes jobs into 3 separate embeddings."""
 from typing import Dict, List, Optional
-from sentence_transformers import SentenceTransformer
 import numpy as np
 import logging
 from config.settings import settings
+from src.utils.vietnamese_translator import VietnameseTranslator
+from src.utils.embedding_loader import load_embedding_model
 
 # Try to import pyvi for Vietnamese tokenization
 try:
@@ -14,12 +15,17 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# Initialize translator for Vietnamese to English preprocessing
+_translator = VietnameseTranslator()
+
 
 def preprocess_job_title(title: str) -> str:
-    """Preprocess job title."""
+    """Preprocess job title: translate Vietnamese to English if needed."""
     if not title:
         return ""
-    text = title.strip().lower()
+    # Translate Vietnamese to English (preserves proper nouns, abbreviations)
+    text = _translator.translate(title)
+    text = text.strip().lower()
     text = " ".join(text.split())  # Remove extra spaces
     if len(text) > 200:
         text = text[:200]
@@ -27,20 +33,24 @@ def preprocess_job_title(title: str) -> str:
 
 
 def preprocess_job_skills(skills: str) -> str:
-    """Preprocess job skills."""
+    """Preprocess job skills: translate Vietnamese to English if needed."""
     if not skills:
         return ""
-    text = skills.strip().lower()
+    # Translate Vietnamese to English (preserves proper nouns, abbreviations)
+    text = _translator.translate(skills)
+    text = text.strip().lower()
     if len(text) > 1000:
         text = text[:1000]
     return text
 
 
 def preprocess_job_requirements(requirements: str) -> str:
-    """Preprocess job requirements."""
+    """Preprocess job requirements: translate Vietnamese to English if needed."""
     if not requirements:
         return ""
-    text = requirements.strip().lower()
+    # Translate Vietnamese to English (preserves proper nouns, abbreviations)
+    text = _translator.translate(requirements)
+    text = text.strip().lower()
     sentences = text.split('.')
     if len(sentences) > 3 and len(text) > 2000:
         text = '. '.join(sentences[:3]) + '.'
@@ -59,12 +69,22 @@ class JobTowerEncoder:
         Args:
             model_name: Name of the model to use. If None, uses model from settings.
         """
-        self.model_name = model_name or settings.EMBEDDING_MODEL
-        logger.info(f"Loading Job Tower encoder model: {self.model_name}")
-        self.model = SentenceTransformer(self.model_name)
+        preferred_model = model_name or settings.EMBEDDING_MODEL
+        logger.info(f"Loading Job Tower encoder model: {preferred_model}")
+        
+        # Use fallback model loading
+        self.model, self.actual_model_name = load_embedding_model(
+            preferred_model=preferred_model,
+            fallback_model="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        )
+        
         self.dimension = self.model.get_sentence_embedding_dimension()
-        self.requires_vietnamese_tokenization = 'SimCSE-VietNamese' in self.model_name or 'SimCSE-Vietnamese' in self.model_name
-        logger.info(f"Job Tower encoder initialized (dimension: {self.dimension})")
+        # Check if actual model requires Vietnamese tokenization
+        self.requires_vietnamese_tokenization = (
+            'SimCSE-VietNamese' in self.actual_model_name or 
+            'SimCSE-Vietnamese' in self.actual_model_name
+        )
+        logger.info(f"Job Tower encoder initialized (dimension: {self.dimension}, model: {self.actual_model_name})")
     
     def _tokenize_vietnamese(self, text: str) -> str:
         """Tokenize Vietnamese text if required."""

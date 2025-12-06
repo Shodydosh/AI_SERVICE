@@ -1,6 +1,6 @@
 """Pydantic schemas for Two-Tower API."""
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Any
 
 
 class FieldWeights(BaseModel):
@@ -14,15 +14,12 @@ class JobSearchRequest(BaseModel):
     """Request for searching jobs for a candidate."""
     candidate_id: str
     top_k: int = Field(default=10, ge=1, le=100)
-    weights: Optional[FieldWeights] = None
-    use_reranking: bool = False
 
 
 class CandidateSearchRequest(BaseModel):
     """Request for searching candidates for a job."""
     job_id: str
     top_k: int = Field(default=10, ge=1, le=100)
-    weights: Optional[FieldWeights] = None
 
 
 class FieldScores(BaseModel):
@@ -32,6 +29,20 @@ class FieldScores(BaseModel):
     experience: float
 
 
+class RuleDetails(BaseModel):
+    """Details for a rule match."""
+    status: str  # "PASS" or "FAIL"
+    explanation: str
+    details: Dict[str, Any]
+
+
+class RuleMatchingResult(BaseModel):
+    """Rule-based matching result."""
+    final_status: str  # "OK" or "NG"
+    rule1: RuleDetails
+    rule2: RuleDetails
+
+
 class JobMatch(BaseModel):
     """Job match result."""
     job_id: str
@@ -39,7 +50,6 @@ class JobMatch(BaseModel):
     company: Optional[str] = None
     location: Optional[str] = None
     score: float
-    explain: FieldScores
 
 
 class CandidateMatch(BaseModel):
@@ -48,7 +58,6 @@ class CandidateMatch(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
     score: float
-    explain: FieldScores
 
 
 class JobSearchResponse(BaseModel):

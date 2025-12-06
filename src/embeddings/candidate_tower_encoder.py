@@ -1,10 +1,11 @@
 """Candidate Tower Encoder - encodes candidates into 3 separate embeddings."""
 from typing import Dict, List, Optional
-from sentence_transformers import SentenceTransformer
 import numpy as np
 import logging
 from config.settings import settings
 from .job_tower_encoder import preprocess_job_title, preprocess_job_skills
+from src.utils.vietnamese_translator import VietnameseTranslator
+from src.utils.embedding_loader import load_embedding_model
 
 # Try to import pyvi for Vietnamese tokenization
 try:
@@ -15,12 +16,17 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# Initialize translator for Vietnamese to English preprocessing
+_translator = VietnameseTranslator()
+
 
 def preprocess_candidate_experience(experience: str) -> str:
-    """Preprocess candidate experience."""
+    """Preprocess candidate experience: translate Vietnamese to English if needed."""
     if not experience:
         return ""
-    text = experience.strip().lower()
+    # Translate Vietnamese to English (preserves proper nouns, abbreviations)
+    text = _translator.translate(experience)
+    text = text.strip().lower()
     if len(text) > 2000:
         text = text[:2000]
     return text
@@ -36,12 +42,22 @@ class CandidateTowerEncoder:
         Args:
             model_name: Name of the model to use. If None, uses model from settings.
         """
-        self.model_name = model_name or settings.EMBEDDING_MODEL
-        logger.info(f"Loading Candidate Tower encoder model: {self.model_name}")
-        self.model = SentenceTransformer(self.model_name)
+        preferred_model = model_name or settings.EMBEDDING_MODEL
+        logger.info(f"Loading Candidate Tower encoder model: {preferred_model}")
+        
+        # Use fallback model loading
+        self.model, self.actual_model_name = load_embedding_model(
+            preferred_model=preferred_model,
+            fallback_model="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+        )
+        
         self.dimension = self.model.get_sentence_embedding_dimension()
-        self.requires_vietnamese_tokenization = 'SimCSE-VietNamese' in self.model_name or 'SimCSE-Vietnamese' in self.model_name
-        logger.info(f"Candidate Tower encoder initialized (dimension: {self.dimension})")
+        # Check if actual model requires Vietnamese tokenization
+        self.requires_vietnamese_tokenization = (
+            'SimCSE-VietNamese' in self.actual_model_name or 
+            'SimCSE-Vietnamese' in self.actual_model_name
+        )
+        logger.info(f"Candidate Tower encoder initialized (dimension: {self.dimension}, model: {self.actual_model_name})")
     
     def _tokenize_vietnamese(self, text: str) -> str:
         """Tokenize Vietnamese text if required."""

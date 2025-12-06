@@ -19,7 +19,9 @@ from src.api.two_tower_schemas import (
     HealthResponse,
     JobMatch,
     CandidateMatch,
-    FieldScores
+    FieldScores,
+    RuleMatchingResult,
+    RuleDetails
 )
 import logging
 
@@ -35,33 +37,23 @@ async def search_jobs(
 ):
     """Find top matching jobs for a candidate."""
     try:
-        matching_service = TwoTowerMatchingService(db, use_faiss=True)
-        
-        weights = None
-        if request.weights:
-            weights = {
-                'title': request.weights.title,
-                'skills': request.weights.skills,
-                'experience': request.weights.experience
-            }
+        matching_service = TwoTowerMatchingService(db)
         
         matches = matching_service.find_jobs_for_candidate(
             candidate_id=request.candidate_id,
-            top_k=request.top_k,
-            weights=weights
+            top_k=request.top_k
         )
         
-        job_matches = [
-            JobMatch(
+        job_matches = []
+        for match in matches:
+            job_match = JobMatch(
                 job_id=match['job_id'],
                 title=match.get('title'),
                 company=match.get('company'),
                 location=match.get('location'),
-                score=match['score'],
-                explain=FieldScores(**match['explain'])
+                score=match['score']
             )
-            for match in matches
-        ]
+            job_matches.append(job_match)
         
         return JobSearchResponse(
             total_matches=len(job_matches),
@@ -82,32 +74,22 @@ async def search_candidates(
 ):
     """Find top matching candidates for a job."""
     try:
-        matching_service = TwoTowerMatchingService(db, use_faiss=True)
-        
-        weights = None
-        if request.weights:
-            weights = {
-                'title': request.weights.title,
-                'skills': request.weights.skills,
-                'experience': request.weights.experience
-            }
+        matching_service = TwoTowerMatchingService(db)
         
         matches = matching_service.find_candidates_for_job(
             job_id=request.job_id,
-            top_k=request.top_k,
-            weights=weights
+            top_k=request.top_k
         )
         
-        candidate_matches = [
-            CandidateMatch(
+        candidate_matches = []
+        for match in matches:
+            candidate_match = CandidateMatch(
                 candidate_id=match['candidate_id'],
                 name=match.get('name'),
                 email=match.get('email'),
-                score=match['score'],
-                explain=FieldScores(**match['explain'])
+                score=match['score']
             )
-            for match in matches
-        ]
+            candidate_matches.append(candidate_match)
         
         return CandidateSearchResponse(
             total_matches=len(candidate_matches),

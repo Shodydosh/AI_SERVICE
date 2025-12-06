@@ -1,242 +1,182 @@
-"""Two-Tower Matching Service with 3-stage pipeline."""
-from typing import List, Dict, Optional, Tuple
+"""Simple Two-Tower Matching Service - no multi-field, no weighted scoring."""
+from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
 import logging
+import torch
 import numpy as np
-from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+import sys
 
+# Add two_tower to path
+two_tower_path = Path(__file__).parent.parent.parent / "two_tower"
+if str(two_tower_path.parent) not in sys.path:
+    sys.path.insert(0, str(two_tower_path.parent))
+
+from two_tower.model import TwoTowerModel
 from src.database.two_tower_repository import TwoTowerRepository
-from src.vector_search.two_tower_faiss_manager import TwoTowerFAISSManager
-from src.embeddings.job_tower_encoder import JobTowerEncoder
-from src.embeddings.candidate_tower_encoder import CandidateTowerEncoder
-from config.settings import settings
+from src.services.embedding_service import OptimizedEmbeddingService
 
 logger = logging.getLogger(__name__)
 
-# Default weights
-DEFAULT_WEIGHTS = {
-    'title': 0.2,
-    'skills': 0.4,
-    'experience': 0.4
-}
-
 
 class TwoTowerMatchingService:
-    """Two-Tower Matching Service with 3-stage pipeline."""
+    """Simple Two-Tower Matching Service - single embedding per candidate/job."""
     
     def __init__(
         self,
         db: Session,
-        use_faiss: bool = True,
-        weights: Optional[Dict[str, float]] = None
+        model_path: Optional[str] = None,
+        device: str = 'cpu'
     ):
         """
         Initialize Two-Tower matching service.
         
         Args:
             db: Database session
-            use_faiss: Whether to use FAISS for fast search
-            weights: Field weights (default: title 0.2, skills 0.4, experience 0.4)
+            model_path: Path to trained two-tower model checkpoint
+            device: Device to run model on
         """
         self.db = db
         self.repository = TwoTowerRepository(db)
-        self.use_faiss = use_faiss
-        self.weights = weights or DEFAULT_WEIGHTS
-        self.faiss_manager = None
+        self.device = device
         
-        if use_faiss:
-            try:
-                dimension = settings.EMBEDDING_DIMENSION
-                self.faiss_manager = TwoTowerFAISSManager(
-                    dimension=dimension,
-                    index_type="HNSW",
-                    index_params={
-                        "M": 32,
-                        "ef_construction": 200,
-                        "ef_search": 128
-                    },
-                    normalize=True
-                )
-                
-                # Try to load existing indices
-                from pathlib import Path
-                base_path = Path("indices/two_tower")
-                if (base_path / "job_title_index.faiss").exists():
-                    self.faiss_manager.load_indices(base_path)
-                    logger.info("Loaded existing Two-Tower FAISS indices")
-                else:
-                    logger.warning("Two-Tower FAISS indices not found. Building from database...")
-                    self.faiss_manager.build_indices_from_db(db)
-            except Exception as e:
-                logger.warning(f"Could not initialize FAISS: {e}. Falling back to database search.")
-                self.use_faiss = False
+        # Load two-tower model
+        if model_path is None:
+            model_path = "outputs_improved/best_model_improved.pt"
+        
+        self.model_path = model_path
+        self.model = None
+        self._load_model()
     
-    def _stage1_per_field_search(
-        self,
-        candidate_embeddings: Dict[str, List[float]],
-        top_n_per_field: int = 1000
-    ) -> Dict[str, List[Tuple[str, float]]]:
-        """
-        Stage 1: Per-field ANN search.
-        
-        Args:
-            candidate_embeddings: Dict with 'title_embedding', 'skills_embedding', 'experience_embedding'
-            top_n_per_field: Top N results per field
-        
-        Returns:
-            Dict with keys: 'title_results', 'skills_results', 'experience_results'
-        """
-        if not self.use_faiss or not self.faiss_manager:
-            # Fallback to database search (not implemented in this version)
-            logger.warning("FAISS not available, cannot perform search")
-            return {
-                'title_results': [],
-                'skills_results': [],
-                'experience_results': []
-            }
-        
-        results = {}
-        
-        # Parallel search across 3 fields
-        with ThreadPoolExecutor(max_workers=3) as executor:
-            futures = {
-                'title': executor.submit(
-                    self.faiss_manager.search_job_by_field,
-                    candidate_embeddings['title_embedding'],
-                    'title',
-                    top_n_per_field
-                ),
-                'skills': executor.submit(
-                    self.faiss_manager.search_job_by_field,
-                    candidate_embeddings['skills_embedding'],
-                    'skills',
-                    top_n_per_field
-                ),
-                'experience': executor.submit(
-                    self.faiss_manager.search_job_by_field,
-                    candidate_embeddings['experience_embedding'],
-                    'requirement',  # Match candidate experience với job requirement
-                    top_n_per_field
-                )
-            }
+    def _load_model(self):
+        """Load two-tower model."""
+        try:
+            logger.info(f"Loading Two-Tower model from: {self.model_path}")
+            self.model = TwoTowerModel(
+                candidate_model_name="VoVanPhuc/sup-SimCSE-VietNamese-phobert-base",
+                job_model_name="VoVanPhuc/sup-SimCSE-VietNamese-phobert-base",
+                output_dim=768
+            )
             
-            results['title_results'] = futures['title'].result()
-            results['skills_results'] = futures['skills'].result()
-            results['experience_results'] = futures['experience'].result()
-        
-        return results
+            checkpoint = torch.load(self.model_path, map_location=self.device)
+            if 'model_state_dict' in checkpoint:
+                self.model.load_state_dict(checkpoint['model_state_dict'], strict=False)
+            else:
+                self.model.load_state_dict(checkpoint, strict=False)
+            
+            self.model.to(self.device)
+            self.model.eval()
+            logger.info("✓ Two-Tower model loaded")
+        except Exception as e:
+            logger.error(f"Error loading model: {e}")
+            raise
     
-    def _stage2_merge_and_score(
-        self,
-        stage1_results: Dict[str, List[Tuple[str, float]]]
-    ) -> Tuple[Dict[str, float], Dict[str, Dict[str, float]]]:
-        """
-        Stage 2: Merge results and compute weighted score.
-        
-        Returns:
-            Tuple of (job_scores, job_field_scores)
-        """
-        # Collect all unique job_ids
-        all_job_ids = set()
-        for field_results in stage1_results.values():
-            all_job_ids.update([job_id for job_id, _ in field_results])
-        
-        # Compute weighted score for each job
-        job_scores = {}
-        job_field_scores = {}
-        
-        for job_id in all_job_ids:
-            # Get scores from each field
-            title_score = next(
-                (score for jid, score in stage1_results['title_results'] if jid == job_id),
-                0.0
-            )
-            skills_score = next(
-                (score for jid, score in stage1_results['skills_results'] if jid == job_id),
-                0.0
-            )
-            experience_score = next(
-                (score for jid, score in stage1_results['experience_results'] if jid == job_id),
-                0.0
-            )
-            
-            # Weighted sum
-            weighted_score = (
-                title_score * self.weights['title'] +
-                skills_score * self.weights['skills'] +
-                experience_score * self.weights['experience']
-            )
-            
-            job_scores[job_id] = weighted_score
-            job_field_scores[job_id] = {
-                'title': title_score,
-                'skills': skills_score,
-                'experience': experience_score
-            }
-        
-        return job_scores, job_field_scores
+    def _build_candidate_text(self, candidate) -> str:
+        """Build candidate text from database record."""
+        parts = []
+        if candidate.title:
+            parts.append(f"Title: {candidate.title}")
+        if candidate.skills:
+            parts.append(f"Skills: {candidate.skills}")
+        if candidate.experience:
+            parts.append(f"Experience: {candidate.experience}")
+        return " | ".join(parts) if parts else ""
+    
+    def _build_job_text(self, job) -> str:
+        """Build job text from database record."""
+        parts = []
+        if job.title:
+            parts.append(f"Title: {job.title}")
+        if job.skills:
+            parts.append(f"Skills: {job.skills}")
+        if job.requirement:
+            parts.append(f"Requirements: {job.requirement}")
+        return " | ".join(parts) if parts else ""
     
     def find_jobs_for_candidate(
         self,
         candidate_id: str,
-        top_k: int = 10,
-        weights: Optional[Dict[str, float]] = None
+        top_k: int = 10
     ) -> List[Dict]:
         """
-        Find top matching jobs for a candidate using 3-stage pipeline.
+        Find top matching jobs for a candidate using simple two-tower similarity.
         
         Args:
             candidate_id: Candidate ID
             top_k: Number of top matches to return
-            weights: Optional field weights (overrides default)
         
         Returns:
             List of job matches with similarity scores
         """
-        if weights:
-            self.weights = weights
-        
         logger.info(f"Two-Tower matching for candidate: {candidate_id}")
         
-        # Get candidate embeddings
+        # Get candidate from database
         candidate = self.repository.get_candidate(candidate_id)
         if not candidate:
             logger.error(f"Candidate {candidate_id} not found")
             return []
         
-        candidate_embeddings = {
-            'title_embedding': candidate.title_embedding,
-            'skills_embedding': candidate.skills_embedding,
-            'experience_embedding': candidate.experience_embedding
-        }
+        # Build candidate text
+        candidate_text = self._build_candidate_text(candidate)
+        if not candidate_text:
+            logger.error(f"Candidate {candidate_id} has no text data")
+            return []
         
-        # Stage 1: Per-field ANN search
-        logger.debug("Stage 1: Per-field ANN search")
-        stage1_results = self._stage1_per_field_search(
-            candidate_embeddings,
-            top_n_per_field=1000
-        )
+        # Get all jobs
+        all_jobs = self.repository.get_all_jobs()
+        if not all_jobs:
+            logger.warning("No jobs found in database")
+            return []
         
-        # Stage 2: Merge and score
-        logger.debug("Stage 2: Merge and score")
-        job_scores, job_field_scores = self._stage2_merge_and_score(stage1_results)
+        logger.info(f"Computing similarity with {len(all_jobs)} jobs...")
         
-        # Sort by score
-        top_jobs = sorted(job_scores.items(), key=lambda x: x[1], reverse=True)
+        # Build job texts
+        job_texts = []
+        job_records = []
+        for job in all_jobs:
+            job_text = self._build_job_text(job)
+            if job_text:
+                job_texts.append(job_text)
+                job_records.append(job)
+        
+        if not job_texts:
+            logger.warning("No valid job texts found")
+            return []
+        
+        # Encode candidate
+        with torch.no_grad():
+            candidate_emb = self.model.encode_candidates([candidate_text])[0]  # [output_dim]
+        
+        # Encode all jobs in batches
+        batch_size = 32
+        all_job_embs = []
+        with torch.no_grad():
+            for i in range(0, len(job_texts), batch_size):
+                batch_texts = job_texts[i:i+batch_size]
+                batch_embs = self.model.encode_jobs(batch_texts)  # [batch_size, output_dim]
+                all_job_embs.append(batch_embs.cpu().numpy())
+        
+        job_embs = np.vstack(all_job_embs)  # [num_jobs, output_dim]
+        candidate_emb_np = candidate_emb.cpu().numpy()  # [output_dim]
+        
+        # Compute cosine similarity (embeddings are already normalized)
+        similarities = np.dot(job_embs, candidate_emb_np)  # [num_jobs]
+        
+        # Get top-k
+        top_indices = np.argsort(similarities)[::-1][:top_k]
         
         # Format results
         results = []
-        for job_id, final_score in top_jobs[:top_k]:
-            job = self.repository.get_job(job_id)
-            if job:
-                results.append({
-                    'job_id': job_id,
-                    'title': job.title,
-                    'company': job.company,
-                    'location': job.location,
-                    'score': final_score,
-                    'explain': job_field_scores[job_id]
-                })
+        for idx in top_indices:
+            job = job_records[idx]
+            score = float(similarities[idx])
+            results.append({
+                'job_id': job.job_id,
+                'title': job.title,
+                'company': job.company,
+                'location': job.location,
+                'score': score
+            })
         
         logger.info(f"Found {len(results)} matching jobs")
         return results
@@ -244,102 +184,86 @@ class TwoTowerMatchingService:
     def find_candidates_for_job(
         self,
         job_id: str,
-        top_k: int = 10,
-        weights: Optional[Dict[str, float]] = None
+        top_k: int = 10
     ) -> List[Dict]:
         """
-        Find top matching candidates for a job.
+        Find top matching candidates for a job using simple two-tower similarity.
         
         Args:
             job_id: Job ID
             top_k: Number of top matches to return
-            weights: Optional field weights
         
         Returns:
             List of candidate matches with similarity scores
         """
-        if weights:
-            self.weights = weights
-        
         logger.info(f"Two-Tower matching for job: {job_id}")
         
-        # Get job embeddings
+        # Get job from database
         job = self.repository.get_job(job_id)
         if not job:
             logger.error(f"Job {job_id} not found")
             return []
         
-        job_embeddings = {
-            'title_embedding': job.title_embedding,
-            'skills_embedding': job.skills_embedding,
-            'requirement_embedding': job.requirement_embedding
-        }
-        
-        # Search candidates (similar to find_jobs_for_candidate but reverse)
-        # For simplicity, we'll search each field and merge
-        if not self.use_faiss or not self.faiss_manager:
-            logger.warning("FAISS not available")
+        # Build job text
+        job_text = self._build_job_text(job)
+        if not job_text:
+            logger.error(f"Job {job_id} has no text data")
             return []
         
-        # Search candidates by each field
-        title_results = self.faiss_manager.search_candidate_by_field(
-            job_embeddings['title_embedding'],
-            'title',
-            top_k * 10
-        )
-        skills_results = self.faiss_manager.search_candidate_by_field(
-            job_embeddings['skills_embedding'],
-            'skills',
-            top_k * 10
-        )
-        experience_results = self.faiss_manager.search_candidate_by_field(
-            job_embeddings['requirement_embedding'],
-            'experience',
-            top_k * 10
-        )
+        # Get all candidates
+        all_candidates = self.repository.get_all_candidates()
+        if not all_candidates:
+            logger.warning("No candidates found in database")
+            return []
         
-        # Merge and score (similar to Stage 2)
-        all_candidate_ids = set()
-        for results in [title_results, skills_results, experience_results]:
-            all_candidate_ids.update([cid for cid, _ in results])
+        logger.info(f"Computing similarity with {len(all_candidates)} candidates...")
         
-        candidate_scores = {}
-        candidate_field_scores = {}
+        # Build candidate texts
+        candidate_texts = []
+        candidate_records = []
+        for candidate in all_candidates:
+            candidate_text = self._build_candidate_text(candidate)
+            if candidate_text:
+                candidate_texts.append(candidate_text)
+                candidate_records.append(candidate)
         
-        for candidate_id in all_candidate_ids:
-            title_score = next((s for cid, s in title_results if cid == candidate_id), 0.0)
-            skills_score = next((s for cid, s in skills_results if cid == candidate_id), 0.0)
-            exp_score = next((s for cid, s in experience_results if cid == candidate_id), 0.0)
-            
-            weighted_score = (
-                title_score * self.weights['title'] +
-                skills_score * self.weights['skills'] +
-                exp_score * self.weights['experience']
-            )
-            
-            candidate_scores[candidate_id] = weighted_score
-            candidate_field_scores[candidate_id] = {
-                'title': title_score,
-                'skills': skills_score,
-                'experience': exp_score
-            }
+        if not candidate_texts:
+            logger.warning("No valid candidate texts found")
+            return []
         
-        # Sort and format
-        top_candidates = sorted(candidate_scores.items(), key=lambda x: x[1], reverse=True)
+        # Encode job
+        with torch.no_grad():
+            job_emb = self.model.encode_jobs([job_text])[0]  # [output_dim]
         
+        # Encode all candidates in batches
+        batch_size = 32
+        all_candidate_embs = []
+        with torch.no_grad():
+            for i in range(0, len(candidate_texts), batch_size):
+                batch_texts = candidate_texts[i:i+batch_size]
+                batch_embs = self.model.encode_candidates(batch_texts)  # [batch_size, output_dim]
+                all_candidate_embs.append(batch_embs.cpu().numpy())
+        
+        candidate_embs = np.vstack(all_candidate_embs)  # [num_candidates, output_dim]
+        job_emb_np = job_emb.cpu().numpy()  # [output_dim]
+        
+        # Compute cosine similarity (embeddings are already normalized)
+        similarities = np.dot(candidate_embs, job_emb_np)  # [num_candidates]
+        
+        # Get top-k
+        top_indices = np.argsort(similarities)[::-1][:top_k]
+        
+        # Format results
         results = []
-        for candidate_id, final_score in top_candidates[:top_k]:
-            candidate = self.repository.get_candidate(candidate_id)
-            if candidate:
-                results.append({
-                    'candidate_id': candidate_id,
-                    'name': candidate.name,
-                    'email': candidate.email,
-                    'score': final_score,
-                    'explain': candidate_field_scores[candidate_id]
-                })
+        for idx in top_indices:
+            candidate = candidate_records[idx]
+            score = float(similarities[idx])
+            results.append({
+                'candidate_id': candidate.candidate_id,
+                'name': candidate.name,
+                'email': candidate.email,
+                'score': score
+            })
         
         logger.info(f"Found {len(results)} matching candidates")
         return results
-
-

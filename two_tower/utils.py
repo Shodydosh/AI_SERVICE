@@ -42,3 +42,14 @@ def cosine_similarity(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     return np.dot(a_norm, b_norm.T)
 
 
+def save_model(model: torch.nn.Module, path: Path):
+    """Save model state dict."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(model.state_dict(), path)
+
+
+def load_model(model: torch.nn.Module, path: Path):
+    """Load model state dict."""
+    model.load_state_dict(torch.load(path, map_location='cpu'))
+
+
