@@ -1,7 +1,5 @@
 """Test Two-Tower model với encoding tiếng Việt đúng."""
 import sys
-import io
-import os
 import warnings
 import logging
 from pathlib import Path
@@ -9,38 +7,20 @@ from typing import List, Dict, Any
 import torch
 import numpy as np
 
-# Fix Windows console encoding for Vietnamese
-if sys.platform == 'win32':
-    # Set console code page to UTF-8
-    try:
-        os.system('chcp 65001 >nul 2>&1')
-    except:
-        pass
-    
-    # Reconfigure stdout/stderr for UTF-8
-    if hasattr(sys.stdout, 'buffer'):
-        sys.stdout = io.TextIOWrapper(
-            sys.stdout.buffer,
-            encoding='utf-8',
-            errors='replace',
-            line_buffering=True
-        )
-    if hasattr(sys.stderr, 'buffer'):
-        sys.stderr = io.TextIOWrapper(
-            sys.stderr.buffer,
-            encoding='utf-8',
-            errors='replace',
-            line_buffering=True
-        )
+# Add project root to path
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
+# Import và setup UTF-8 logging
+from src.utils.logging_utf8 import setup_utf8_logging
+
+# Setup logging với UTF-8 (chỉ console, không file)
+setup_utf8_logging(level=logging.INFO, log_file=None)
 
 # Suppress warnings
 warnings.filterwarnings('ignore')
 logging.getLogger('sentence_transformers').setLevel(logging.ERROR)
 logging.getLogger('transformers').setLevel(logging.ERROR)
-
-# Add project root to path
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
 
 from sqlalchemy.orm import Session
 from src.database.connection import SessionLocal

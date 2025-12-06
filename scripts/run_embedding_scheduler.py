@@ -6,18 +6,18 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
+# Import và setup UTF-8 logging
+from src.utils.logging_utf8 import setup_utf8_logging
+
+# Setup logging với UTF-8 (console + file)
+setup_utf8_logging(
+    level=logging.INFO,
+    log_file='embedding_scheduler.log',
+    file_encoding='utf-8'
+)
+
 from src.services.embedding_scheduler import run_scheduler_worker
 import argparse
-
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('embedding_scheduler.log'),
-        logging.StreamHandler()
-    ]
-)
 
 logger = logging.getLogger(__name__)
 
