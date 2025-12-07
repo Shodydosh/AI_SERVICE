@@ -411,3 +411,8 @@ Two-Tower Model là phương pháp **state-of-the-art** cho recommendation syste
 Đây là phương pháp được khuyến nghị cho production systems!
 
 
+
+
+
+
+

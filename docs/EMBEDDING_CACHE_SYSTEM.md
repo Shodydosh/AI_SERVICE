@@ -383,3 +383,8 @@ crontab -e
 - Adjust TTL nếu cần
 - Tune batch size cho performance
 
+
+
+
+
+

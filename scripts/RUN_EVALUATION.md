@@ -148,3 +148,8 @@ pip install -r requirements.txt
 - Kết quả được hiển thị chi tiết với emoji và formatting để dễ đọc
 
 
+
+
+
+
+

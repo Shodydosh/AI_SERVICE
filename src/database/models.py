@@ -58,12 +58,21 @@ class ProcessedCandidateRecommendation(Base):
     experience_similarity = Column(Float)
     desired_job_similarity = Column(Float)
     rank = Column(Integer, nullable=False)  # Rank from 1-10
+    
+    # Explainability fields
+    rule_scores = Column(Text)  # JSON string: rule matching results
+    embedding_scores = Column(Text)  # JSON string: embedding similarity scores
+    explanation_text = Column(Text)  # Human-readable explanation
+    comprehensive_explanation = Column(Text)  # JSON string: full explanation with all levels
+    confidence_score = Column(Float)  # Final confidence score (0-1)
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     __table_args__ = (
         Index('idx_processed_candidate_job', 'candidate_id', 'job_id', unique=True),
         Index('idx_processed_candidate_rank', 'candidate_id', 'rank'),
+        Index('idx_processed_candidate_confidence', 'confidence_score'),
     )
 
 

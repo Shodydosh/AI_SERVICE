@@ -202,3 +202,8 @@ def get_cache_manager(ttl_hours: float = 12.0) -> EmbeddingCacheManager:
         _global_cache = EmbeddingCacheManager(cache_ttl_hours=ttl_hours)
     return _global_cache
 
+
+
+
+
+

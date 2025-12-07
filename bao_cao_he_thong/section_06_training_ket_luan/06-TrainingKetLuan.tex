@@ -1,0 +1,508 @@
+\section{Training, Utilities và Kết luận}
+
+% ============================================================================
+% A. PHẦN DỰA TRÊN CODEBASE
+% ============================================================================
+
+\subsection{Training Pipeline}
+
+\textbf{File}: \texttt{src/models/training\_pipeline.py}
+
+\textbf{Theo codebase hiện tại}:
+
+\subsubsection{Collate Function}
+
+\textbf{Theo codebase hiện tại}, function \texttt{collate\_fn(batch)}:
+
+\begin{itemize}
+    \item Stack candidate embeddings: \texttt{torch.stack([torch.tensor(item['candidate\_title']) for item in batch])}
+    \item Stack job embeddings tương tự
+    \item Extract labels: \texttt{torch.tensor([item['label'] for item in batch], dtype=torch.float32)}
+    \item Extract IDs: \texttt{candidate\_ids}, \texttt{job\_ids}
+    \item Return dictionary với tất cả tensors và IDs
+\end{itemize}
+
+\subsubsection{GroundTruthDataset Class}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{Initialization}:
+    \begin{itemize}
+        \item Parameters: \texttt{ground\_truth: List[Dict]}, \texttt{candidate\_embeddings: Dict}, \texttt{job\_embeddings: Dict}
+        \item Store embeddings dictionaries
+    \end{itemize}
+    
+    \item \textbf{Method \texttt{\_\_getitem\_\_()}}:
+    \begin{enumerate}
+        \item Get pair từ ground truth
+        \item Extract \texttt{candidate\_id}, \texttt{job\_id}, \texttt{label}
+        \item Get embeddings từ dictionaries
+        \item Nếu missing: return zero embeddings
+        \item Return dictionary với 6 embeddings và label
+    \end{enumerate}
+    
+    \item \textbf{Method \texttt{\_\_len\_\_()}}: Return length of ground truth
+\end{itemize}
+
+\subsubsection{TwoTowerTrainer Class}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{Initialization}:
+    \begin{itemize}
+        \item Parameters: \texttt{model: TwoTowerModel}, \texttt{device='cpu'}, \texttt{learning\_rate=0.001}, \texttt{weight\_decay=0.0001}
+        \item Move model to device
+        \item Create optimizer: \texttt{optim.Adam(model.parameters(), lr=learning\_rate, weight\_decay=weight\_decay)}
+        \item Loss function: \texttt{nn.BCEWithLogitsLoss()}
+        \item Create \texttt{TwoTowerEvaluator}
+    \end{itemize}
+    
+    \item \textbf{Method \texttt{train\_epoch()}}:
+    \begin{enumerate}
+        \item Set model to train mode: \texttt{model.train()}
+        \item Iterate through dataloader với progress bar
+        \item Move batch to device
+        \item Forward pass:
+        \begin{itemize}
+            \item \texttt{optimizer.zero\_grad()}
+            \item \texttt{model(candidate\_title, candidate\_skills, candidate\_experience, job\_title, job\_skills, job\_requirement)}
+            \item Get \texttt{candidate\_repr}, \texttt{job\_repr}
+            \item Compute similarity: \texttt{model.compute\_similarity(candidate\_repr, job\_repr)}
+        \end{itemize}
+        \item Compute loss: \texttt{criterion(similarity, labels)}
+        \item Backward pass: \texttt{loss.backward()}, \texttt{optimizer.step()}
+        \item Accumulate loss
+        \item Return average loss
+    \end{enumerate}
+    
+    \item \textbf{Method \texttt{evaluate()}}:
+    \begin{enumerate}
+        \item Set model to eval mode: \texttt{model.eval()}
+        \item Collect predictions, labels, IDs
+        \item Collect field similarities (title, skills, experience)
+        \item Compute metrics bằng \texttt{TwoTowerEvaluator}
+        \item Return metrics dictionary
+    \end{enumerate}
+\end{itemize}
+
+\subsection{Evaluation Metrics}
+
+\textbf{File}: \texttt{src/models/evaluation\_metrics.py}
+
+\textbf{Theo codebase hiện tại}, class \texttt{TwoTowerEvaluator}:
+
+\subsubsection{Method \texttt{compute\_ranking\_metrics()}}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{Input}: \texttt{predictions}, \texttt{labels}, \texttt{candidate\_ids}, \texttt{job\_ids}
+    \item \textbf{Group by candidate}: Tạo dictionary \texttt{candidate\_to\_pairs}
+    \item \textbf{Compute metrics per candidate}:
+    \begin{itemize}
+        \item Sort pairs by prediction score (descending)
+        \item \textbf{NDCG@10}: \texttt{\_compute\_ndcg(sorted\_labels, k=10)}
+        \item \textbf{MRR}: \texttt{\_compute\_mrr(sorted\_labels)}
+        \item \textbf{Precision@K}: \texttt{precision\_score(sorted\_labels[:k], binary\_predictions[:k])} cho k in [5, 10, 20]
+        \item \textbf{Recall@K}: \texttt{recall\_score(sorted\_labels[:k], binary\_predictions[:k])} cho k in [5, 10, 20]
+    \end{itemize}
+    \item \textbf{Average metrics} across all candidates
+    \item Return dictionary với keys: \texttt{'ndcg@10'}, \texttt{'mrr'}, \texttt{'precision@5'}, \texttt{'precision@10'}, \texttt{'precision@20'}, \texttt{'recall@5'}, \texttt{'recall@10'}, \texttt{'recall@20'}
+\end{itemize}
+
+\subsubsection{Method \texttt{\_compute\_ndcg()}}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item Compute DCG: \texttt{sum(rel / log2(i + 2)) for i in range(k)}
+    \item Compute Ideal DCG: Sort labels descending, compute DCG
+    \item Return: \texttt{DCG / IDCG} nếu IDCG > 0, else 0.0
+\end{itemize}
+
+\subsubsection{Method \texttt{\_compute\_mrr()}}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item Find first position với label == 1
+    \item Return: \texttt{1.0 / (position + 1)}
+    \item Return 0.0 nếu không có positive label
+\end{itemize}
+
+\subsubsection{Method \texttt{compute\_classification\_metrics()}}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{Binary predictions}: \texttt{(predictions >= threshold).astype(int)} (threshold=0.5 default)
+    \item \textbf{Metrics}:
+    \begin{itemize}
+        \item \texttt{accuracy}: \texttt{accuracy\_score(labels, binary\_predictions)}
+        \item \texttt{precision}: \texttt{precision\_score(labels, binary\_predictions, zero\_division=0)}
+        \item \texttt{recall}: \texttt{recall\_score(labels, binary\_predictions, zero\_division=0)}
+        \item \texttt{f1}: \texttt{f1\_score(labels, binary\_predictions, zero\_division=0)}
+        \item \texttt{auc\_roc}: \texttt{roc\_auc\_score(labels, predictions)} (với try-except)
+        \item \texttt{auc\_pr}: \texttt{average\_precision\_score(labels, predictions)} (với try-except)
+    \end{itemize}
+    \item Return metrics dictionary
+\end{itemize}
+
+\subsubsection{Method \texttt{compute\_similarity\_metrics()}}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{Label correlation}: \texttt{np.corrcoef(predictions, labels)[0, 1]}
+    \item \textbf{Field correlations}: Nếu \texttt{field\_similarities} provided:
+    \begin{itemize}
+        \item Compute correlation cho mỗi field (title, skills, experience)
+        \item Return: \texttt{\{'label\_correlation', 'title\_similarity\_correlation', 'skills\_similarity\_correlation', 'experience\_similarity\_correlation'\}}
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Method \texttt{evaluate()}}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item Comprehensive evaluation combining all metrics
+    \item Call \texttt{compute\_classification\_metrics()}, \texttt{compute\_ranking\_metrics()}, \texttt{compute\_similarity\_metrics()}
+    \item Merge tất cả metrics vào một dictionary
+    \item Return all metrics
+\end{itemize}
+
+\subsubsection{Method \texttt{print\_metrics()}}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item Print metrics in formatted way
+    \item Sections: Classification Metrics, Ranking Metrics, Similarity Metrics
+    \item Format: 4 decimal places
+\end{itemize}
+
+\subsection{Ground Truth Building}
+
+\textbf{File}: \texttt{src/models/ground\_truth\_builder.py}
+
+\textbf{Theo codebase hiện tại}, class \texttt{GroundTruthBuilder}:
+
+\subsubsection{Initialization}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item Parameters:
+    \begin{itemize}
+        \item \texttt{db: Session}
+        \item \texttt{title\_similarity\_threshold: float = 0.6}
+        \item \texttt{skills\_similarity\_threshold: float = 0.5}
+        \item \texttt{experience\_similarity\_threshold: float = 0.5}
+        \item \texttt{combined\_threshold: float = 0.55}
+    \end{itemize}
+    \item Initialize \texttt{MultiFieldEmbeddingRepository}
+\end{itemize}
+
+\subsubsection{Method \texttt{compute\_field\_similarities()}}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{Title similarity}:
+    \begin{itemize}
+        \item Convert embeddings to numpy arrays
+        \item Compute norms
+        \item Dot product: \texttt{np.dot(cand\_title, job\_title)} (cosine similarity vì normalized)
+    \end{itemize}
+    
+    \item \textbf{Skills similarity}: Tương tự title
+    
+    \item \textbf{Experience-Requirement similarity}: Tương tự
+    
+    \item \textbf{Combined similarity}: Weighted average
+    \begin{itemize}
+        \item \texttt{title * 0.2 + skills * 0.4 + experience * 0.4}
+    \end{itemize}
+    
+    \item Return dictionary với 4 scores
+\end{itemize}
+
+\subsubsection{Method \texttt{is\_positive\_pair()}}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item Check individual thresholds: \texttt{title >= threshold}, \texttt{skills >= threshold}, \texttt{experience >= threshold}
+    \item Count fields pass threshold
+    \item Return True nếu:
+    \begin{itemize}
+        \item Combined score >= \texttt{combined\_threshold}, HOẶC
+        \item At least 2 fields pass threshold
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Method \texttt{build\_ground\_truth\_dataset()}}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{enumerate}
+    \item Load candidates và jobs từ database
+    \item Limit nếu \texttt{max\_candidates} hoặc \texttt{max\_jobs} specified
+    \item For each candidate:
+    \begin{itemize}
+        \item For each job:
+        \begin{itemize}
+            \item Compute field similarities
+            \item Create pair data với similarities
+            \item Label: 1 nếu positive pair, 0 nếu negative
+        \end{itemize}
+        \item Select negative pairs: bottom 20\% similarity scores
+    \end{itemize}
+    \item Balance dataset:
+    \begin{itemize}
+        \item Check minimum positive/negative pairs
+        \item Sample negatives nếu quá nhiều (max 2x positives)
+    \end{itemize}
+    \item Combine và shuffle
+    \item Return list of pairs
+\end{enumerate}
+
+\subsubsection{Method \texttt{save\_ground\_truth()}}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item Save to JSON file với encoding utf-8
+    \item Indent=2, ensure\_ascii=False
+    \item Log statistics: total pairs, positive pairs, negative pairs
+\end{itemize}
+
+\subsubsection{Method \texttt{load\_ground\_truth()}}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item Load từ JSON file
+    \item Return list of pairs
+    \item Log statistics
+\end{itemize}
+
+\subsection{Utilities và Helpers}
+
+\subsubsection{Text Processing Utilities}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{VietnameseTranslator} (\texttt{src/utils/vietnamese\_translator.py}):
+    \begin{itemize}
+        \item Translate Vietnamese text to English
+        \item Multiple translation backends
+    \end{itemize}
+    
+    \item \textbf{TextEnhancer} (\texttt{src/utils/text\_enhancer.py}):
+    \begin{itemize}
+        \item Text enhancement operations
+        \item Normalize text
+    \end{itemize}
+    
+    \item \textbf{Vietnamese Tokenization}:
+    \begin{itemize}
+        \item Library: pyvi
+        \item Usage: Tokenize Vietnamese text nếu model yêu cầu
+        \item Optional dependency (có fallback)
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Embedding Utilities}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{EmbeddingLoader} (\texttt{src/utils/embedding\_loader.py}):
+    \begin{itemize}
+        \item Load embedding models với fallback support
+        \item Model loading, dimension detection
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Explanation Utilities}
+
+\textbf{File}: \texttt{src/utils/explanation\_generator.py}
+
+\textbf{Theo codebase hiện tại}, class \texttt{ExplanationGenerator}:
+
+\subsubsection{5 Levels of Explainability}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{enumerate}
+    \item \textbf{Level 1: Rule Matching Explanation (Deterministic)}
+    \begin{itemize}
+        \item Method: \texttt{generate\_level1\_rule\_explanation()}
+        \item Extract rule scores và status
+        \item Extract matched tokens từ debug info
+        \item Return JSON với triggered rules và scores
+    \end{itemize}
+    
+    \item \textbf{Level 2: Embedding Similarity Explanation (Semantic Features)}
+    \begin{itemize}
+        \item Method: \texttt{generate\_level2\_embedding\_explanation()}
+        \item Input: \texttt{title\_similarity}, \texttt{skills\_similarity}, \texttt{experience\_requirement\_similarity}, \texttt{combined\_similarity}
+        \item Return JSON với embedding scores cho từng field
+        \item Interpretation: percentage match cho mỗi field
+    \end{itemize}
+    
+    \item \textbf{Level 3: Humanized Explanation (Natural Language)}
+    \begin{itemize}
+        \item Method: \texttt{generate\_level3\_humanized\_explanation()}
+        \item Generate human-readable explanation text (Vietnamese)
+        \item Components:
+        \begin{itemize}
+            \item Title explanation với score
+            \item Skills explanation với matched skills list
+            \item Embedding scores explanation
+            \item Final status explanation
+        \end{itemize}
+        \item Return: \texttt{explanation\_text} (Vietnamese) và \texttt{explanation\_text\_en} (English translation)
+    \end{itemize}
+    
+    \item \textbf{Level 4: Counterfactual Explanation (What-if scenarios)}
+    \begin{itemize}
+        \item Method: \texttt{generate\_level4\_counterfactual\_explanation()}
+        \item Extract missing skills từ job requirements
+        \item Suggest top 5 missing skills
+        \item Estimate score improvement (placeholder: 0.1)
+        \item Return suggestions với action và message
+    \end{itemize}
+    
+    \item \textbf{Level 5: Confidence Score Calculation}
+    \begin{itemize}
+        \item Method: \texttt{calculate\_confidence\_score()}
+        \item Default weights:
+        \begin{itemize}
+            \item \texttt{embedding: 0.4}
+            \item \texttt{rule: 0.5}
+            \item \texttt{recency: 0.05}
+            \item \texttt{popularity: 0.05}
+        \end{itemize}
+        \item Normalize rule score: \texttt{min(rule\_score / 3.0, 1.0)}
+        \item Weighted sum: \texttt{weights['embedding'] * embedding\_score + weights['rule'] * normalized\_rule\_score + ...}
+        \item Clamp to [0, 1]
+        \item Interpretation: "Rất cao", "Cao", "Trung bình", "Thấp" dựa trên confidence value
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{Method \texttt{generate\_comprehensive\_explanation()}}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item Generate tất cả 5 levels
+    \item Combine vào một JSON structure
+    \item Include timestamp
+    \item Summary với final status, confidence percent, match percents
+    \item Return complete explanation JSON ready for storage
+\end{itemize}
+
+\subsubsection{ExplanationStorage}
+
+\textbf{File}: \texttt{src/utils/explanation\_storage.py}
+
+\textbf{Theo codebase hiện tại}:
+\begin{itemize}
+    \item Store explanations to database
+    \item (Codebase không cung cấp chi tiết implementation)
+\end{itemize}
+
+\subsubsection{Data Utilities}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{ColumnMapper} (\texttt{src/utils/column\_mapper.py}):
+    \begin{itemize}
+        \item Map columns từ different data sources
+        \item Methods: \texttt{map\_jd\_columns()}, \texttt{map\_candidate\_columns()}
+    \end{itemize}
+    
+    \item \textbf{ReportGenerator} (\texttt{src/utils/report\_generator.py}):
+    \begin{itemize}
+        \item Generate quality và preprocessing reports
+    \end{itemize}
+    
+    \item \textbf{ThreeFieldExtractor} (\texttt{src/utils/three\_field\_extractor.py}):
+    \begin{itemize}
+        \item Extract 3 fields (title, skills, requirement/experience) từ raw data
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Logging Utilities}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{LoggingUTF8} (\texttt{src/utils/logging\_utf8.py}):
+    \begin{itemize}
+        \item UTF-8 logging support
+    \end{itemize}
+\end{itemize}
+
+\subsection{Kết luận}
+
+\subsubsection{Tóm tắt hệ thống}
+
+\textbf{Theo codebase hiện tại}, hệ thống AI Service là một job recommendation system với:
+
+\begin{itemize}
+    \item \textbf{Kiến trúc}: Two-Tower Architecture với multi-field embeddings
+    \item \textbf{Matching}: Semantic similarity search với FAISS
+    \item \textbf{Rule-based}: Enhanced rule matching cho validation
+    \item \textbf{Explainability}: 5-level explanation system
+    \item \textbf{Caching}: Smart caching với 12-hour TTL
+    \item \textbf{API}: RESTful API với FastAPI version 2.0.0
+\end{itemize}
+
+\subsubsection{Điểm mạnh}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{enumerate}
+    \item \textbf{Multi-field embeddings}: 3 embeddings riêng biệt cho fine-grained matching
+    \item \textbf{FAISS integration}: Efficient vector search với HNSW indices (6 indices riêng biệt)
+    \item \textbf{Rule-based matching}: Deterministic validation với explainability
+    \item \textbf{Caching strategy}: Smart caching với content hash tracking để improve performance
+    \item \textbf{Vietnamese support}: Vietnamese text processing và translation
+    \item \textbf{Comprehensive explainability}: 5 levels of explanations cho recommendations
+\end{enumerate}
+
+\subsubsection{Điểm cần cải thiện}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{enumerate}
+    \item \textbf{Matching service}: Hiện tại sử dụng single embedding (concatenated text) thay vì 3 embeddings riêng biệt. Cần integrate FAISS indices thay vì brute-force similarity computation.
+    \item \textbf{Weighted scoring}: Cần support weighted combination của 3 embeddings trong matching service.
+    \item \textbf{Background tasks}: Reindex endpoint có TODO comment - cần implement async reindexing.
+    \item \textbf{Monitoring}: Cần thêm metrics và observability (codebase không cung cấp monitoring implementation).
+    \item \textbf{Testing}: Cần thêm unit tests và integration tests (codebase có test files nhưng không đầy đủ).
+\end{enumerate}
+
+\subsubsection{Hướng phát triển}
+
+\textbf{Dựa trên codebase hiện tại và cấu trúc hệ thống}:
+
+\begin{enumerate}
+    \item \textbf{Hybrid retrieval}: Kết hợp semantic search, keyword search, và rule-based filtering
+    \item \textbf{Reranking}: Cross-encoder reranking cho better accuracy
+    \item \textbf{Learning-to-rank}: Train ranking model với user feedback
+    \item \textbf{Real-time updates}: Support real-time index updates (hiện tại chỉ có scheduled refresh)
+    \item \textbf{Distributed system}: Scale to distributed architecture
+\end{enumerate}
+
+\textbf{Lưu ý}: Các hướng phát triển trên là đề xuất dựa trên cấu trúc hiện tại, không phải implementation có sẵn trong codebase.
+
+

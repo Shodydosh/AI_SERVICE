@@ -330,3 +330,8 @@ two_tower/
 - FAISS index chỉ có trong `JobRecommender` class, không được tích hợp vào main service
 - Model được load từ checkpoint file, không từ database
 
+
+
+
+
+

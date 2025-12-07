@@ -1,0 +1,508 @@
+\section{API và Services}
+
+% ============================================================================
+% A. PHẦN DỰA TRÊN CODEBASE
+% ============================================================================
+
+\subsection{FastAPI Application}
+
+\textbf{File}: \texttt{src/api/main.py}
+
+\textbf{Theo codebase hiện tại}:
+
+\subsubsection{Application Configuration}
+
+\begin{itemize}
+    \item \textbf{Title}: \texttt{"AI Job Recommendation Service - Two-Tower Architecture"}
+    \item \textbf{Version}: \texttt{"2.0.0"}
+    \item \textbf{Description}: \texttt{"AI-powered job recommendation service using Two-Tower architecture"}
+    \item \textbf{Logging configuration}:
+    \begin{itemize}
+        \item Level: \texttt{settings.LOG\_LEVEL} (default: "INFO")
+        \item Format: \texttt{'\%(asctime)s - \%(name)s - \%(levelname)s - \%(message)s'}
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{CORS Middleware}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \texttt{allow\_origins=["*"]}: Allow all origins
+    \item \texttt{allow\_credentials=True}
+    \item \texttt{allow\_methods=["*"]}: Allow all HTTP methods
+    \item \texttt{allow\_headers=["*"]}: Allow all headers
+\end{itemize}
+
+\subsubsection{Routes}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item Include \texttt{two\_tower\_router} với prefix \texttt{"/api/v2"}
+    \item Tags: \texttt{["two-tower"]}
+\end{itemize}
+
+\subsubsection{Static Files}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item Mount tại \texttt{"/static"}
+    \item Path: \texttt{static/} directory (relative to project root)
+    \item Check directory exists trước khi mount
+\end{itemize}
+
+\subsubsection{Event Handlers}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{startup\_event()}:
+    \begin{itemize}
+        \item Log separator line
+        \item Log: "Two-Tower Architecture API Server Starting..."
+        \item Log system info:
+        \begin{itemize}
+            \item API Version: 2.0.0
+            \item Host: \texttt{settings.API\_HOST:settings.API\_PORT}
+            \item Embedding Model: \texttt{settings.EMBEDDING\_MODEL}
+            \item Embedding Dimension: \texttt{settings.EMBEDDING\_DIMENSION}
+        \end{itemize}
+    \end{itemize}
+    
+    \item \textbf{shutdown\_event()}:
+    \begin{itemize}
+        \item Log: "Shutting down Two-Tower API Server..."
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Root Endpoint}
+
+\textbf{Theo codebase hiện tại}, \texttt{GET /}:
+
+\begin{itemize}
+    \item Check static file: \texttt{static/index.html}
+    \item Nếu tồn tại: return \texttt{FileResponse}
+    \item Nếu không: return JSON:
+    \begin{itemize}
+        \item \texttt{message}: "AI Job Recommendation Service - Two-Tower Architecture"
+        \item \texttt{version}: "2.0.0"
+        \item \texttt{docs}: "/docs"
+        \item \texttt{api}: "/api/v2"
+    \end{itemize}
+\end{itemize}
+
+\subsection{API Routes}
+
+\textbf{File}: \texttt{src/api/two\_tower\_routes.py}
+
+\textbf{Theo codebase hiện tại}, router có các endpoints:
+
+\subsubsection{POST /api/v2/search/jobs}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{Request}: \texttt{JobSearchRequest}
+    \begin{itemize}
+        \item \texttt{candidate\_id: str} (required)
+        \item \texttt{top\_k: int = 10} (default, ge=1, le=100)
+    \end{itemize}
+    
+    \item \textbf{Response}: \texttt{JobSearchResponse}
+    \begin{itemize}
+        \item \texttt{total\_matches: int}
+        \item \texttt{matches: List[JobMatch]}
+    \end{itemize}
+    
+    \item \textbf{Logic}:
+    \begin{enumerate}
+        \item Create \texttt{TwoTowerMatchingService(db)}
+        \item Call \texttt{find\_jobs\_for\_candidate(candidate\_id, top\_k)}
+        \item Convert results to \texttt{JobMatch} objects
+        \item Return \texttt{JobSearchResponse}
+    \end{enumerate}
+    
+    \item \textbf{Error handling}:
+    \begin{itemize}
+        \item Try-except block
+        \item Log error với \texttt{exc\_info=True}
+        \item Raise \texttt{HTTPException} với status 500
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{POST /api/v2/search/candidates}
+
+\textbf{Theo codebase hiện tại}, tương tự \texttt{search/jobs}:
+
+\begin{itemize}
+    \item \textbf{Request}: \texttt{CandidateSearchRequest}
+    \begin{itemize}
+        \item \texttt{job\_id: str} (required)
+        \item \texttt{top\_k: int = 10}
+    \end{itemize}
+    
+    \item \textbf{Response}: \texttt{CandidateSearchResponse}
+    \begin{itemize}
+        \item \texttt{total\_matches: int}
+        \item \texttt{matches: List[CandidateMatch]}
+    \end{itemize}
+    
+    \item \textbf{Logic}: Tương tự search jobs nhưng gọi \texttt{find\_candidates\_for\_job()}
+\end{itemize}
+
+\subsubsection{POST /api/v2/index/job}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{Request}: \texttt{IndexJobRequest}
+    \begin{itemize}
+        \item \texttt{job\_id: str} (required)
+        \item \texttt{title: str} (required)
+        \item \texttt{skills: Optional[str] = None}
+        \item \texttt{requirement: Optional[str] = None}
+        \item \texttt{company: Optional[str] = None}
+        \item \texttt{location: Optional[str] = None}
+    \end{itemize}
+    
+    \item \textbf{Response}: \texttt{IndexResponse}
+    \begin{itemize}
+        \item \texttt{status: str} ("success")
+        \item \texttt{job\_id: str}
+        \item \texttt{message: str} ("Job indexed successfully")
+    \end{itemize}
+    
+    \item \textbf{Logic}:
+    \begin{enumerate}
+        \item Create \texttt{JobTowerEncoder()}
+        \item Encode job: \texttt{encode\_job(title, skills, requirements)}
+        \item Get 3 embeddings: \texttt{title\_embedding}, \texttt{skills\_embedding}, \texttt{requirement\_embedding}
+        \item Create \texttt{TwoTowerRepository(db)}
+        \item Save to database: \texttt{repository.create\_job()} với 3 embeddings
+        \item Return success response
+    \end{enumerate}
+\end{itemize}
+
+\subsubsection{POST /api/v2/index/candidate}
+
+\textbf{Theo codebase hiện tại}, tương tự \texttt{index/job}:
+
+\begin{itemize}
+    \item \textbf{Request}: \texttt{IndexCandidateRequest}
+    \begin{itemize}
+        \item \texttt{candidate\_id: str} (required)
+        \item \texttt{title: Optional[str] = None}
+        \item \texttt{skills: Optional[str] = None}
+        \item \texttt{experience: Optional[str] = None}
+        \item \texttt{name: Optional[str] = None}
+        \item \texttt{email: Optional[str] = None}
+    \end{itemize}
+    
+    \item \textbf{Logic}:
+    \begin{enumerate}
+        \item Create \texttt{CandidateTowerEncoder()}
+        \item Encode candidate: \texttt{encode\_candidate(title, skills, experience)}
+        \item Save to database với 3 embeddings
+    \end{enumerate}
+\end{itemize}
+
+\subsubsection{POST /api/v2/reindex}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{Request}: \texttt{ReindexRequest}
+    \begin{itemize}
+        \item \texttt{reindex\_type: str = "full"} (pattern: "full|incremental|job|candidate")
+        \item \texttt{force: bool = False}
+    \end{itemize}
+    
+    \item \textbf{Response}: \texttt{ReindexResponse}
+    \begin{itemize}
+        \item \texttt{status: str} ("accepted")
+        \item \texttt{reindex\_id: Optional[int]}
+        \item \texttt{message: str} ("Reindex job started")
+        \item \texttt{estimated\_time\_minutes: Optional[int]} (default: 30)
+    \end{itemize}
+    
+    \item \textbf{Logic}:
+    \begin{enumerate}
+        \item Create \texttt{TwoTowerRepository(db)}
+        \item Create reindex tracking record: \texttt{repository.create\_reindex\_tracking(reindex\_type, status="pending")}
+        \item \textbf{TODO}: Run reindex in background task (chưa implement, theo codebase)
+        \item Return accepted status
+    \end{enumerate}
+\end{itemize}
+
+\subsubsection{GET /api/v2/health}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{Response}: \texttt{HealthResponse}
+    \begin{itemize}
+        \item \texttt{status: str} ("healthy")
+        \item \texttt{version: str} ("2.0.0")
+        \item \texttt{indices: Dict[str, str]}: Status của 6 FAISS indices
+        \item \texttt{database: str} ("connected")
+        \item \texttt{total\_jobs: int}
+        \item \texttt{total\_candidates: int}
+    \end{itemize}
+    
+    \item \textbf{Logic}:
+    \begin{enumerate}
+        \item Create \texttt{TwoTowerRepository(db)}
+        \item Count jobs: \texttt{len(repository.get\_all\_jobs())}
+        \item Count candidates: \texttt{len(repository.get\_all\_candidates())}
+        \item Check FAISS indices:
+        \begin{itemize}
+            \item Path: \texttt{"indices/two\_tower"}
+            \item Check 6 index files:
+            \begin{itemize}
+                \item \texttt{job\_title\_index.faiss}
+                \item \texttt{job\_skills\_index.faiss}
+                \item \texttt{job\_requirement\_index.faiss}
+                \item \texttt{candidate\_title\_index.faiss}
+                \item \texttt{candidate\_skills\_index.faiss}
+                \item \texttt{candidate\_experience\_index.faiss}
+            \end{itemize}
+            \item Status: "loaded" nếu file exists, "not\_found" nếu không
+        \end{itemize}
+        \item Return health response
+    \end{enumerate}
+\end{itemize}
+
+\subsection{API Schemas}
+
+\textbf{File}: \texttt{src/api/two\_tower\_schemas.py}
+
+\textbf{Theo codebase hiện tại}, sử dụng Pydantic models:
+
+\subsubsection{Request Models}
+
+\begin{itemize}
+    \item \textbf{JobSearchRequest}:
+    \begin{itemize}
+        \item \texttt{candidate\_id: str}
+        \item \texttt{top\_k: int = 10} (Field với ge=1, le=100)
+    \end{itemize}
+    
+    \item \textbf{CandidateSearchRequest}:
+    \begin{itemize}
+        \item \texttt{job\_id: str}
+        \item \texttt{top\_k: int = 10}
+    \end{itemize}
+    
+    \item \textbf{IndexJobRequest}:
+    \begin{itemize}
+        \item \texttt{job\_id: str}
+        \item \texttt{title: str}
+        \item \texttt{skills: Optional[str] = None}
+        \item \texttt{requirement: Optional[str] = None}
+        \item \texttt{company: Optional[str] = None}
+        \item \texttt{location: Optional[str] = None}
+    \end{itemize}
+    
+    \item \textbf{IndexCandidateRequest}:
+    \begin{itemize}
+        \item \texttt{candidate\_id: str}
+        \item \texttt{title: Optional[str] = None}
+        \item \texttt{skills: Optional[str] = None}
+        \item \texttt{experience: Optional[str] = None}
+        \item \texttt{name: Optional[str] = None}
+        \item \texttt{email: Optional[str] = None}
+    \end{itemize}
+    
+    \item \textbf{ReindexRequest}:
+    \begin{itemize}
+        \item \texttt{reindex\_type: str = "full"} (pattern validation)
+        \item \texttt{force: bool = False}
+    \end{itemize}
+    
+    \item \textbf{FieldWeights}:
+    \begin{itemize}
+        \item \texttt{title: float = 0.2} (ge=0.0, le=1.0)
+        \item \texttt{skills: float = 0.4}
+        \item \texttt{experience: float = 0.4}
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Response Models}
+
+\begin{itemize}
+    \item \textbf{JobMatch}:
+    \begin{itemize}
+        \item \texttt{job\_id: str}
+        \item \texttt{title: Optional[str] = None}
+        \item \texttt{company: Optional[str] = None}
+        \item \texttt{location: Optional[str] = None}
+        \item \texttt{score: float}
+    \end{itemize}
+    
+    \item \textbf{CandidateMatch}:
+    \begin{itemize}
+        \item \texttt{candidate\_id: str}
+        \item \texttt{name: Optional[str] = None}
+        \item \texttt{email: Optional[str] = None}
+        \item \texttt{score: float}
+    \end{itemize}
+    
+    \item \textbf{JobSearchResponse}:
+    \begin{itemize}
+        \item \texttt{total\_matches: int}
+        \item \texttt{matches: List[JobMatch]}
+    \end{itemize}
+    
+    \item \textbf{CandidateSearchResponse}:
+    \begin{itemize}
+        \item \texttt{total\_matches: int}
+        \item \texttt{matches: List[CandidateMatch]}
+    \end{itemize}
+    
+    \item \textbf{IndexResponse}:
+    \begin{itemize}
+        \item \texttt{status: str}
+        \item \texttt{job\_id: Optional[str] = None}
+        \item \texttt{candidate\_id: Optional[str] = None}
+        \item \texttt{message: str}
+    \end{itemize}
+    
+    \item \textbf{ReindexResponse}:
+    \begin{itemize}
+        \item \texttt{status: str}
+        \item \texttt{reindex\_id: Optional[int] = None}
+        \item \texttt{message: str}
+        \item \texttt{estimated\_time\_minutes: Optional[int] = None}
+    \end{itemize}
+    
+    \item \textbf{HealthResponse}:
+    \begin{itemize}
+        \item \texttt{status: str}
+        \item \texttt{version: str}
+        \item \texttt{indices: Dict[str, str]}
+        \item \texttt{database: str}
+        \item \texttt{total\_jobs: int}
+        \item \texttt{total\_candidates: int}
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Explainability Models}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{FieldScores}:
+    \begin{itemize}
+        \item \texttt{title: float}
+        \item \texttt{skills: float}
+        \item \texttt{experience: float}
+    \end{itemize}
+    
+    \item \textbf{RuleDetails}:
+    \begin{itemize}
+        \item \texttt{status: str} ("PASS" or "FAIL")
+        \item \texttt{explanation: str}
+        \item \texttt{details: Dict[str, Any]}
+    \end{itemize}
+    
+    \item \textbf{RuleMatchingResult}:
+    \begin{itemize}
+        \item \texttt{final\_status: str} ("OK" or "NG")
+        \item \texttt{rule1: RuleDetails}
+        \item \texttt{rule2: RuleDetails}
+    \end{itemize}
+\end{itemize}
+
+\subsection{Matching Services}
+
+\subsubsection{TwoTowerMatchingService}
+
+\textbf{File}: \texttt{src/services/two\_tower\_matching\_service.py}
+
+\textbf{Theo codebase hiện tại}, đã được mô tả chi tiết trong Section 3.1.
+
+\textbf{Lưu ý quan trọng}: Service này sử dụng single embedding (concatenated text) thay vì 3 embeddings riêng biệt, như comment trong code: \texttt{"Simple Two-Tower Matching Service - no multi-field, no weighted scoring."}
+
+\subsection{Embedding Services}
+
+\subsubsection{OptimizedEmbeddingService}
+
+\textbf{File}: \texttt{src/services/embedding\_service.py}
+
+\textbf{Theo codebase hiện tại}, đã được mô tả chi tiết trong Section 2.4.
+
+\subsubsection{EmbeddingCacheManager}
+
+\textbf{File}: \texttt{src/services/embedding\_cache\_manager.py}
+
+\textbf{Theo codebase hiện tại}, đã được mô tả chi tiết trong Section 2.4.
+
+\subsection{Scheduler Services}
+
+\subsubsection{EmbeddingScheduler}
+
+\textbf{File}: \texttt{src/services/embedding\_scheduler.py}
+
+\textbf{Theo codebase hiện tại}, class \texttt{EmbeddingScheduler}:
+
+\begin{itemize}
+    \item \textbf{Chức năng}: Background scheduler cho periodic embedding refresh (12-hour cycle)
+    \item \textbf{Initialization}:
+    \begin{itemize}
+        \item \texttt{refresh\_interval\_hours: float = 12.0}
+        \item \texttt{batch\_size: int = 100}
+        \item \texttt{max\_items\_per\_cycle: int = 10000}
+        \item \texttt{running: bool = False}
+    \end{itemize}
+    
+    \item \textbf{Method \texttt{run\_refresh\_cycle()}}:
+    \begin{enumerate}
+        \item Create database session nếu không có
+        \item Create \texttt{OptimizedEmbeddingService}
+        \item Fetch candidates needing refresh: \texttt{batch\_get\_candidates\_needing\_refresh(limit=max\_items\_per\_cycle)}
+        \item Process candidates: \texttt{batch\_process\_candidates(candidates)}
+        \item Fetch jobs needing refresh: \texttt{batch\_get\_jobs\_needing\_refresh(limit=max\_items\_per\_cycle)}
+        \item Process jobs: \texttt{batch\_process\_jobs(jobs)}
+        \item Clear expired cache: \texttt{cache.clear\_expired()}
+        \item Return statistics: \texttt{\{'candidates\_processed', 'jobs\_processed', 'duration\_seconds'\}}
+    \end{enumerate}
+    
+    \item \textbf{Method \texttt{run\_continuous()}}:
+    \begin{itemize}
+        \item Run scheduler continuously (for background worker)
+        \item Parameter: \texttt{check\_interval\_seconds: int = 300} (5 minutes)
+        \item Logic:
+        \begin{itemize}
+            \item Check if refresh is needed (dựa trên \texttt{last\_refresh} và \texttt{refresh\_interval\_hours})
+            \item Nếu cần: run refresh cycle
+            \item Sleep until next check
+            \item Handle KeyboardInterrupt để stop gracefully
+        \end{itemize}
+    \end{itemize}
+    
+    \item \textbf{Method \texttt{stop()}}: Set \texttt{running = False}
+    
+    \item \textbf{Function \texttt{run\_scheduler\_worker()}}:
+    \begin{itemize}
+        \item Run scheduler as background worker
+        \item Designed to run as separate process/daemon
+        \item Parameters: \texttt{refresh\_interval\_hours}, \texttt{batch\_size}, \texttt{check\_interval\_seconds}
+    \end{itemize}
+    
+    \item \textbf{Command-line interface}:
+    \begin{itemize}
+        \item Arguments:
+        \begin{itemize}
+            \item \texttt{--refresh-interval}: Refresh interval in hours (default: 12)
+            \item \texttt{--batch-size}: Batch size for processing (default: 100)
+            \item \texttt{--check-interval}: Check interval in seconds (default: 300)
+            \item \texttt{--once}: Run once and exit (for cron jobs)
+        \end{itemize}
+        \item Nếu \texttt{--once}: Run one cycle và exit
+        \item Nếu không: Run continuously
+    \end{itemize}
+\end{itemize}
+
+

@@ -125,3 +125,8 @@ class MultiFieldEmbeddingRepository:
             return job
 
 
+
+
+
+
+

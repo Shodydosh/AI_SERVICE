@@ -6,6 +6,39 @@ Tài liệu này hướng dẫn demo tất cả features của hệ thống AI J
 
 ---
 
+## 0. PREREQUISITES
+
+### 0.1. Requirements
+
+**Database:**
+- PostgreSQL (cho các scripts cần database)
+- Database connection string trong `config/settings.py`
+
+**Python Packages:**
+- Xem `requirements.txt`
+- PyTorch
+- sentence-transformers
+- FastAPI
+- SQLAlchemy
+- psycopg2
+- numpy
+- faiss-cpu hoặc faiss-gpu
+
+**Model Checkpoint:**
+- Optional: `outputs_improved/best_model_improved.pt` (nếu có)
+- Scripts sẽ sử dụng untrained model nếu không tìm thấy checkpoint
+
+### 0.2. Scripts cần Database
+
+Các script sau **CẦN DATABASE**:
+- `scripts/test_two_tower_standalone.py` - Cần precomputed embeddings trong database
+- `scripts/test_two_tower_precomputed.py` - Cần precomputed embeddings trong database
+- `scripts/recommend_jobs_for_candidates.py` - Cần candidates và jobs trong database
+- `scripts/test_two_tower_with_vietnamese.py` - Cần database
+- `scripts/process_multi_field_embeddings.py` - Cần database để lưu embeddings
+
+---
+
 ## 1. KHỞI ĐỘNG HỆ THỐNG
 
 ### 1.1. Khởi động API Server
@@ -284,7 +317,44 @@ curl -X POST "http://localhost:8000/api/v2/reindex" \
 
 ## 3. SCRIPTS DEMO
 
-### 3.1. Test Two-Tower với Precomputed Embeddings
+### 3.1. Test Two-Tower (CHỈ SỬ DỤNG PRECOMPUTED TỪ DATABASE)
+
+**File:** `scripts/test_two_tower_standalone.py`
+
+**Cách chạy:**
+```bash
+python scripts/test_two_tower_standalone.py
+```
+
+**Chức năng:**
+- **Chỉ sử dụng:** Precomputed embeddings từ database
+- Load embeddings từ `MultiFieldEmbeddingRepository`
+- Tính combined embedding (average của title, skills, experience/requirement)
+- Tính similarity matrix
+- Hiển thị top 3 job recommendations cho mỗi candidate
+- In statistics
+
+**Workflow:**
+1. Kết nối database
+2. Load precomputed embeddings từ database
+3. Tính combined embedding cho candidates và jobs
+4. Tính similarity matrix
+5. Hiển thị top 3 recommendations
+
+**Yêu cầu:**
+- PostgreSQL phải đang chạy
+- Database connection phải được cấu hình đúng
+- Data đã được process và có embeddings trong database
+
+**Output:**
+- Top 3 job recommendations cho mỗi candidate
+- Similarity scores
+- Statistics (average, max, min, median similarity)
+- Thông tin đầy đủ về candidates và jobs từ database
+
+---
+
+### 3.2. Test Two-Tower với Precomputed Embeddings (CẦN DATABASE)
 
 **File:** `scripts/test_two_tower_precomputed.py`
 
@@ -316,9 +386,11 @@ python scripts/test_two_tower_precomputed.py \
   - Rule 2 (Skill) score và status
   - Final Decision (OK/NG)
 
+**Lưu ý:** Cần PostgreSQL đang chạy và có data trong database.
+
 ---
 
-### 3.2. Recommend Jobs for Candidates
+### 3.3. Recommend Jobs for Candidates (CẦN DATABASE)
 
 **File:** `scripts/recommend_jobs_for_candidates.py`
 
@@ -356,7 +428,7 @@ python scripts/recommend_jobs_for_candidates.py \
 
 ---
 
-### 3.3. Test Two-Tower với Vietnamese
+### 3.4. Test Two-Tower với Vietnamese (CẦN DATABASE)
 
 **File:** `scripts/test_two_tower_with_vietnamese.py`
 
@@ -374,7 +446,7 @@ python scripts/test_two_tower_with_vietnamese.py \
 
 ---
 
-### 3.4. Process Multi-Field Embeddings
+### 3.5. Process Multi-Field Embeddings (CẦN DATABASE)
 
 **File:** `scripts/process_multi_field_embeddings.py`
 
@@ -840,19 +912,237 @@ python scripts/run_embedding_scheduler.py
 
 ---
 
-## 9. TROUBLESHOOTING
+## 9. DEBUG GUIDE
 
-### Lỗi: Database connection failed
-- Kiểm tra PostgreSQL đã chạy chưa
-- Kiểm tra connection string trong `config/settings.py`
+### 9.1. Kiểm tra Database Connection
+
+**Script 1: Check PostgreSQL Setup**
+```bash
+python scripts/check_postgresql_setup.py
+```
+
+Script này sẽ kiểm tra:
+- Python modules (psycopg2, SQLAlchemy)
+- Database configuration
+- Database connection
+- PostgreSQL extensions
+- Existing tables
+
+**Script 2: Test Database Connection**
+```bash
+python test_db_connection.py
+```
+
+Script này sẽ:
+- Hiển thị database configuration
+- Test connection
+- Provide specific error messages và solutions
+
+**Script 3: Check Database Status**
+```bash
+python scripts/check_database_status.py
+```
+
+Script này sẽ:
+- Đếm số lượng jobs và candidates trong database
+- Hiển thị sample IDs
+
+**Script 4: Quick Debug (Recommended)**
+```bash
+python scripts/debug_database_connection.py
+```
+
+Script này sẽ:
+- Kiểm tra configuration
+- Kiểm tra PostgreSQL service (Windows)
+- Test connection
+- Check tables và data
+- Provide specific solutions cho từng lỗi
+
+### 9.2. Debug Workflow
+
+**Bước 1: Kiểm tra PostgreSQL Service**
+```powershell
+# Windows PowerShell
+Get-Service -Name postgresql*
+
+# Nếu không thấy service, kiểm tra process
+Get-Process -Name postgres -ErrorAction SilentlyContinue
+```
+
+**Bước 2: Start PostgreSQL (nếu chưa chạy)**
+
+**Cách 1: Sử dụng PowerShell (Recommended)**
+```powershell
+# Tìm service name
+Get-Service -Name postgresql*
+
+# Start service (thay tên service đúng, ví dụ: postgresql-x64-18)
+Start-Service -Name postgresql-x64-18
+
+# Kiểm tra status
+Get-Service -Name postgresql-x64-18
+```
+
+**Cách 2: Sử dụng net command**
+```powershell
+# Start service
+net start postgresql-x64-18
+
+# Kiểm tra status
+sc query postgresql-x64-18
+```
+
+**Cách 3: Qua Services GUI**
+1. Mở Services: `services.msc` hoặc Windows + R -> services.msc
+2. Tìm PostgreSQL service (ví dụ: postgresql-x64-18)
+3. Right-click -> Start
+
+**Lưu ý:** Thay `postgresql-x64-18` bằng tên service thực tế trên máy bạn (có thể là version khác như 14, 15, 16, 17, etc.)
+
+**Bước 3: Test Connection**
+```bash
+python test_db_connection.py
+```
+
+**Bước 4: Kiểm tra Database và Tables**
+```bash
+python scripts/check_database_status.py
+```
+
+**Bước 5: Nếu database/tables không tồn tại**
+```bash
+# Tạo tables
+python scripts/init_multi_field_tables.py
+
+# Process data
+python scripts/process_multi_field_embeddings.py \
+    --jd-file data/filtered/jds_with_skills.csv \
+    --candidate-file data/filtered/candidates_with_skills.csv
+```
+
+### 9.3. Common Issues và Solutions
+
+**Issue 1: Connection Refused**
+- **Nguyên nhân:** PostgreSQL service không chạy
+- **Solution:** Start PostgreSQL service
+
+**Issue 2: Password Authentication Failed**
+- **Nguyên nhân:** Password sai hoặc user không tồn tại
+- **Solution:** Kiểm tra password trong `config/settings.py` hoặc `.env`
+
+**Issue 3: Database Does Not Exist**
+- **Nguyên nhân:** Database chưa được tạo
+- **Solution:** Tạo database: `CREATE DATABASE job_recommendation_db;`
+
+**Issue 4: Tables Do Not Exist**
+- **Nguyên nhân:** Tables chưa được tạo
+- **Solution:** Chạy `python scripts/init_multi_field_tables.py`
+
+**Issue 5: No Data in Tables**
+- **Nguyên nhân:** Chưa process data
+- **Solution:** Chạy `python scripts/process_multi_field_embeddings.py`
+
+---
+
+## 10. TROUBLESHOOTING
+
+### Lỗi: Database connection failed (psycopg2.OperationalError)
+
+**Lỗi:**
+```
+connection to server at "localhost" (::1), port 5432 failed: Connection refused
+Is the server running on that host and accepting TCP/IP connections?
+```
+
+**Debug Steps:**
+
+1. **Chạy diagnostic script:**
+   ```bash
+   python scripts/check_postgresql_setup.py
+   ```
+   
+   Hoặc:
+   ```bash
+   python test_db_connection.py
+   ```
+
+2. **Kiểm tra PostgreSQL đã chạy chưa:**
+   ```powershell
+   # Windows (PowerShell)
+   Get-Service -Name postgresql*
+   
+   # Hoặc kiểm tra process
+   Get-Process -Name postgres
+   ```
+
+3. **Khởi động PostgreSQL nếu chưa chạy:**
+   ```powershell
+   # Windows - Tìm service name trước
+   Get-Service -Name postgresql*
+   
+   # Sau đó start (thay tên service đúng)
+   Start-Service -Name postgresql-x64-XX
+   
+   # Hoặc dùng net command
+   net start postgresql-x64-XX
+   ```
+
+4. **Kiểm tra connection string trong `config/settings.py`:**
+   - Host: localhost (default)
+   - Port: 5432 (default)
+   - Database: job_recommendation_db
+   - Username: postgres (default)
+   - Password: 123 (default, có thể thay đổi trong .env)
+
+5. **Kiểm tra database có tồn tại:**
+   ```sql
+   -- Connect to PostgreSQL
+   psql -U postgres
+   
+   -- List databases
+   \l
+   
+   -- Create database nếu chưa có
+   CREATE DATABASE job_recommendation_db;
+   ```
+
+6. **Kiểm tra tables có tồn tại:**
+   ```bash
+   python scripts/check_database_status.py
+   ```
+
+**File config:** `config/settings.py`
+- Default: DB_USER="postgres", DB_PASSWORD="123", DB_HOST="localhost", DB_PORT=5432, DB_NAME="job_recommendation_db"
 
 ### Lỗi: Model not found
 - Kiểm tra model checkpoint file tồn tại
 - Default path: `outputs_improved/best_model_improved.pt`
 
 ### Lỗi: No candidates/jobs found
-- Chạy script để process data: `scripts/process_multi_field_embeddings.py`
-- Hoặc index qua API: `POST /api/v2/index/job` và `POST /api/v2/index/candidate`
+
+**Giải pháp:**
+
+1. **Chạy script để process data:**
+   ```bash
+   python scripts/process_multi_field_embeddings.py \
+     --jd-file data/filtered/jds_with_skills.csv \
+     --candidate-file data/filtered/candidates_with_skills.csv
+   ```
+
+2. **Hoặc index qua API:**
+   ```bash
+   # Index job
+   curl -X POST "http://localhost:8000/api/v2/index/job" ...
+   
+   # Index candidate
+   curl -X POST "http://localhost:8000/api/v2/index/candidate" ...
+   ```
+
+3. **Hoặc sử dụng script không cần database:**
+   ```bash
+   python scripts/test_two_tower_standalone.py
+   ```
 
 ### Lỗi: FAISS indices not found
 - Chạy script để build indices: `scripts/batch_reindex_two_tower.py`
@@ -860,7 +1150,43 @@ python scripts/run_embedding_scheduler.py
 
 ---
 
-## 10. TÀI LIỆU THAM KHẢO
+## 10. QUICK TEST
+
+### Test với Precomputed Embeddings từ Database
+
+Script `test_two_tower_standalone.py` **chỉ sử dụng precomputed embeddings từ database**:
+
+```bash
+python scripts/test_two_tower_standalone.py
+```
+
+**Workflow:**
+1. Kết nối database
+2. Load precomputed embeddings từ database
+   - Lấy 5 candidates ngẫu nhiên
+   - Lấy tất cả jobs
+   - Tính combined embedding (average của title, skills, experience/requirement)
+   - Tính similarity
+
+**Yêu cầu:**
+- PostgreSQL phải đang chạy
+- Database connection phải được cấu hình đúng
+- Data đã được process và có embeddings trong database
+
+**Ưu điểm:**
+- Sử dụng precomputed embeddings (nhanh, không cần encode lại)
+- Không cần load model
+- Hiển thị thông tin đầy đủ từ database
+
+**Output:**
+- Top 3 job recommendations cho mỗi candidate
+- Similarity scores
+- Statistics (average, max, min, median similarity)
+- Thông tin đầy đủ về candidates và jobs từ database
+
+---
+
+## 11. TÀI LIỆU THAM KHẢO
 
 - `README_TWO_TOWER.md` - Quick start guide
 - `report_architecture.md` - Kiến trúc hệ thống

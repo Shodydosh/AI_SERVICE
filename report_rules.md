@@ -362,3 +362,8 @@ VIETNAMESE_ENGLISH_SKILLS = {
 - Category matching giúp match skills cùng domain (ví dụ: react → frontend category)
 - Vietnamese-English translation giúp match skills giữa 2 ngôn ngữ
 
+
+
+
+
+

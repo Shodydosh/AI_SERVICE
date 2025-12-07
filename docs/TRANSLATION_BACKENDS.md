@@ -216,3 +216,8 @@ Nếu bạn đang dùng Google Translate và muốn chuyển sang offline:
 Không cần thay đổi code khác, API giống nhau!
 
 
+
+
+
+
+

@@ -25,7 +25,9 @@ logging.getLogger('transformers').setLevel(logging.ERROR)
 from sqlalchemy.orm import Session
 from src.database.connection import SessionLocal
 from src.utils.rule_matcher import RuleMatcher
+from src.utils.explanation_generator import ExplanationGenerator, AuditLogger
 from src.database.multi_field_repository import MultiFieldEmbeddingRepository
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -127,10 +129,13 @@ def test_two_tower_precomputed(
     output_print(f"  Output File: {output_file}")
     output_print(f"  Using: Precomputed embeddings from database")
     
-    # Initialize rule matcher
-    output_print("\n1. Initializing Rule Matcher...")
+    # Initialize rule matcher and explanation generator
+    output_print("\n1. Initializing Rule Matcher and Explanation Generator...")
     rule_matcher = RuleMatcher()
+    explanation_generator = ExplanationGenerator()
+    audit_logger = AuditLogger()
     output_print("[OK] Rule Matcher initialized")
+    output_print("[OK] Explanation Generator initialized")
     
     # Load data from database
     output_print("\n2. Loading precomputed embeddings from database...")
@@ -249,6 +254,66 @@ def test_two_tower_precomputed(
                     job_description=getattr(job, 'description', None)
                 )
                 
+                # Compute field-by-field embedding similarities
+                title_sim = 0.0
+                skills_sim = 0.0
+                exp_req_sim = 0.0
+                
+                if candidate.title_embedding and job.title_embedding:
+                    title_emb_cand = np.array(candidate.title_embedding)
+                    title_emb_job = np.array(job.title_embedding)
+                    if len(title_emb_cand) == len(title_emb_job):
+                        title_sim = float(np.dot(title_emb_cand, title_emb_job) / 
+                                        (np.linalg.norm(title_emb_cand) * np.linalg.norm(title_emb_job)))
+                
+                if candidate.skills_embedding and job.skills_embedding:
+                    skills_emb_cand = np.array(candidate.skills_embedding)
+                    skills_emb_job = np.array(job.skills_embedding)
+                    if len(skills_emb_cand) == len(skills_emb_job):
+                        skills_sim = float(np.dot(skills_emb_cand, skills_emb_job) / 
+                                         (np.linalg.norm(skills_emb_cand) * np.linalg.norm(skills_emb_job)))
+                
+                if candidate.experience_embedding and job.requirement_embedding:
+                    exp_emb_cand = np.array(candidate.experience_embedding)
+                    req_emb_job = np.array(job.requirement_embedding)
+                    if len(exp_emb_cand) == len(req_emb_job):
+                        exp_req_sim = float(np.dot(exp_emb_cand, req_emb_job) / 
+                                          (np.linalg.norm(exp_emb_cand) * np.linalg.norm(req_emb_job)))
+                
+                embedding_scores = {
+                    'title_similarity': title_sim,
+                    'skills_similarity': skills_sim,
+                    'experience_requirement_similarity': exp_req_sim,
+                    'combined_similarity': similarity
+                }
+                
+                # Generate comprehensive explanation
+                comprehensive_explanation = explanation_generator.generate_comprehensive_explanation(
+                    rule_result=rule_result,
+                    embedding_scores=embedding_scores,
+                    candidate_title=candidate.title or "",
+                    job_title=job.title or "",
+                    candidate_skills=candidate_skills,
+                    job_requirements=job.requirement,
+                    rule_matcher=rule_matcher
+                )
+                
+                # Audit logging
+                features_used = ['title_embedding', 'skills_embedding', 'experience_embedding']
+                rules_triggered = []
+                if rule_result.get('rule1', {}).get('status') == 'PASS':
+                    rules_triggered.append('title_similarity')
+                if rule_result.get('rule2', {}).get('status') == 'PASS':
+                    rules_triggered.append('skill_overlap')
+                
+                audit_logger.log_explanation(
+                    candidate_id=candidate.candidate_id,
+                    job_id=job.job_id,
+                    explanation=comprehensive_explanation,
+                    features_used=features_used,
+                    rules_triggered=rules_triggered
+                )
+                
                 # Print recommendation
                 output_print(f"\n{'-'*80}")
                 output_print(f"RECOMMENDATION #{rank}")
@@ -257,14 +322,49 @@ def test_two_tower_precomputed(
                 output_print(f"Title: {safe_print(job.title)}")
                 output_print(f"Company: {safe_print(job.company)}")
                 output_print(f"Location: {safe_print(job.location)}")
+                
+                # Basic matching scores
                 output_print(f"\nMatching Scores:")
-                output_print(f"  Two-Tower Similarity (Precomputed): {similarity:.4f}")
+                output_print(f"  Two-Tower Similarity (Precomputed): {similarity:.4f} ({similarity*100:.1f}%)")
                 output_print(f"  Rule 1 - Title Score: {rule_result.get('rule1', {}).get('score', 0):.4f} "
+                           f"({rule_result.get('rule1', {}).get('score', 0)*100:.1f}%) "
                            f"(Status: {rule_result.get('rule1', {}).get('status', 'UNKNOWN')})")
                 output_print(f"  Rule 2 - Skill Score: {rule_result.get('rule2', {}).get('score', 0):.4f} "
                            f"(Status: {rule_result.get('rule2', {}).get('status', 'UNKNOWN')})")
                 output_print(f"  Final Decision: {rule_result.get('final_status', 'UNKNOWN')}")
                 output_print(f"  Reason: {rule_result.get('reason', 'N/A')}")
+                
+                # Embedding similarities (Level 2)
+                output_print(f"\nEmbedding Similarities (Level 2):")
+                output_print(f"  Title Match: {title_sim*100:.1f}%")
+                output_print(f"  Skills Match: {skills_sim*100:.1f}%")
+                output_print(f"  Experience-Requirement Match: {exp_req_sim*100:.1f}%")
+                
+                # Confidence Score (Level 5)
+                confidence = comprehensive_explanation['levels']['level5_confidence']
+                output_print(f"\nConfidence Score (Level 5):")
+                output_print(f"  Final Confidence: {confidence['final_confidence_percent']:.1f}%")
+                output_print(f"  Interpretation: {confidence['interpretation']}")
+                
+                # Humanized Explanation (Level 3)
+                humanized = comprehensive_explanation['levels']['level3_humanized']
+                output_print(f"\nHumanized Explanation (Level 3):")
+                output_print(f"  {humanized['explanation_text']}")
+                
+                # Rule Explanation (Level 1)
+                rule_expl = comprehensive_explanation['levels']['level1_rule']
+                if rule_expl['rules_triggered']:
+                    output_print(f"\nRule Matching (Level 1):")
+                    for rule in rule_expl['rules_triggered']:
+                        output_print(f"  - {rule['rule']}: {rule.get('percent', rule.get('score', 0))}% "
+                                   f"({rule.get('details', 'N/A')})")
+                
+                # Counterfactual (Level 4)
+                counterfactual = comprehensive_explanation['levels'].get('level4_counterfactual')
+                if counterfactual and counterfactual.get('suggestions'):
+                    output_print(f"\nCounterfactual Suggestions (Level 4):")
+                    for suggestion in counterfactual['suggestions'][:3]:
+                        output_print(f"  - {suggestion['message']}")
                 
                 # Embedding info
                 output_print(f"\nEmbedding Info:")
@@ -274,6 +374,10 @@ def test_two_tower_precomputed(
                 
                 if job.requirement:
                     output_print(f"\nJob Requirements: {safe_print(job.requirement, max_length=400)}")
+                
+                # Full explanation JSON (for debugging)
+                output_print(f"\n[DEBUG] Full Explanation JSON:")
+                output_print(json.dumps(comprehensive_explanation, indent=2, ensure_ascii=False))
         
         # Statistics
         output_print(f"\n\n{'='*100}")

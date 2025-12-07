@@ -196,3 +196,8 @@ Tất cả 14 tests đều pass ✅
 - Generic skills blacklist có thể mở rộng thêm
 - Skill categories có thể mở rộng thêm
 
+
+
+
+
+

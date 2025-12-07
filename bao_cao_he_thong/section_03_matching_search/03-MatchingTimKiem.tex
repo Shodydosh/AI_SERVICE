@@ -1,0 +1,374 @@
+\section{Hệ Thống Matching và Tìm Kiếm}
+
+% ============================================================================
+% A. PHẦN DỰA TRÊN CODEBASE
+% ============================================================================
+
+\subsection{Two-Tower Matching Service}
+
+\textbf{File}: \texttt{src/services/two\_tower\_matching\_service.py}
+
+\textbf{Theo codebase hiện tại}, class \texttt{TwoTowerMatchingService}:
+
+\subsubsection{Khởi tạo}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item Parameters:
+    \begin{itemize}
+        \item \texttt{db: Session}: Database session
+        \item \texttt{model\_path: Optional[str] = None}: Path to trained model checkpoint
+        \item \texttt{device: str = 'cpu'}: Device to run model on
+    \end{itemize}
+    \item Initialize:
+    \begin{itemize}
+        \item \texttt{TwoTowerRepository(db)}
+        \item Load Two-Tower model (default: \texttt{"outputs\_improved/best\_model\_improved.pt"})
+        \item Set device
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Phương thức \texttt{find\_jobs\_for\_candidate()}}
+
+\textbf{Theo codebase hiện tại}, quy trình:
+
+\begin{enumerate}
+    \item Get candidate từ database bằng \texttt{repository.get\_candidate(candidate\_id)}
+    \item Build candidate text: \texttt{"Title: \{title\} | Skills: \{skills\} | Experience: \{experience\}"}
+    \item Get all jobs từ database bằng \texttt{repository.get\_all\_jobs()}
+    \item Build job texts tương tự: \texttt{"Title: \{title\} | Skills: \{skills\} | Requirements: \{requirement\}"}
+    \item Encode candidate:
+    \begin{itemize}
+        \item \texttt{model.encode\_candidates([candidate\_text])[0]}
+        \item Return: \texttt{[output\_dim]} tensor
+    \end{itemize}
+    \item Encode all jobs in batches:
+    \begin{itemize}
+        \item Batch size: \texttt{32}
+        \item \texttt{model.encode\_jobs(batch\_texts)} → \texttt{[batch\_size, output\_dim]}
+        \item Convert to numpy và stack
+    \end{itemize}
+    \item Compute cosine similarity:
+    \begin{itemize}
+        \item \texttt{np.dot(job\_embs, candidate\_emb\_np)} → \texttt{[num\_jobs]}
+        \item Embeddings đã được normalize → dot product = cosine similarity
+    \end{itemize}
+    \item Get top-k:
+    \begin{itemize}
+        \item \texttt{np.argsort(similarities)[::-1][:top\_k]}
+        \item Sort descending và lấy top k
+    \end{itemize}
+    \item Format results:
+    \begin{itemize}
+        \item Return list of dicts với keys: \texttt{'job\_id'}, \texttt{'title'}, \texttt{'company'}, \texttt{'location'}, \texttt{'score'}
+    \end{itemize}
+\end{enumerate}
+
+\textbf{Lưu ý quan trọng}: \textbf{Theo codebase hiện tại}, service này sử dụng \textbf{single embedding} (concatenated text) thay vì 3 embeddings riêng biệt. Comment trong code ghi rõ: \texttt{"Simple Two-Tower Matching Service - no multi-field, no weighted scoring."}
+
+\subsubsection{Phương thức \texttt{find\_candidates\_for\_job()}}
+
+\textbf{Theo codebase hiện tại}, tương tự \texttt{find\_jobs\_for\_candidate()} nhưng ngược lại:
+
+\begin{enumerate}
+    \item Get job từ database
+    \item Build job text
+    \item Get all candidates
+    \item Build candidate texts
+    \item Encode job
+    \item Encode all candidates in batches
+    \item Compute cosine similarity
+    \item Get top-k
+    \item Return results với \texttt{'candidate\_id'}, \texttt{'name'}, \texttt{'email'}, \texttt{'score'}
+\end{enumerate}
+
+\subsubsection{Helper methods}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \texttt{\_build\_candidate\_text()}: Build text từ database record
+    \begin{itemize}
+        \item Format: \texttt{"Title: \{title\} | Skills: \{skills\} | Experience: \{experience\}"}
+        \item Join bằng \texttt{" | "}
+    \end{itemize}
+    \item \texttt{\_build\_job\_text()}: Build text từ job record
+    \begin{itemize}
+        \item Format: \texttt{"Title: \{title\} | Skills: \{skills\} | Requirements: \{requirement\}"}
+    \end{itemize}
+\end{itemize}
+
+\subsection{Vector Search với FAISS}
+
+\textbf{File}: \texttt{src/vector\_search/two\_tower\_faiss\_manager.py}
+
+\textbf{Theo codebase hiện tại}, class \texttt{TwoTowerFAISSManager}:
+
+\subsubsection{Khởi tạo}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item Parameters:
+    \begin{itemize}
+        \item \texttt{dimension: int = 768}: Embedding dimension
+        \item \texttt{index\_type: str = "HNSW"}: Type of FAISS index ("Flat", "IVF", "HNSW")
+        \item \texttt{index\_params: Optional[Dict] = None}: Parameters cho index construction
+        \item \texttt{normalize: bool = True}: Normalize vectors cho cosine similarity
+    \end{itemize}
+    
+    \item \textbf{6 FAISS indices riêng biệt}:
+    \begin{itemize}
+        \item Job indices: \texttt{job\_title\_index}, \texttt{job\_skills\_index}, \texttt{job\_requirement\_index}
+        \item Candidate indices: \texttt{candidate\_title\_index}, \texttt{candidate\_skills\_index}, \texttt{candidate\_experience\_index}
+    \end{itemize}
+    
+    \item \textbf{ID maps}:
+    \begin{itemize}
+        \item Forward maps: \texttt{FAISS index position → entity\_id}
+        \item Reverse maps: \texttt{entity\_id → FAISS index position}
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Index Initialization}
+
+\textbf{Theo codebase hiện tại}, method \texttt{\_initialize\_indices()}:
+
+\begin{itemize}
+    \item \textbf{HNSW Index}:
+    \begin{itemize}
+        \item \texttt{M = 32} (default): Number of connections per node
+        \item Create 6 \texttt{IndexHNSWFlat} indices
+        \item Set \texttt{ef\_construction = 200} (default): Size of candidate list during construction
+    \end{itemize}
+    
+    \item \textbf{Flat Index}:
+    \begin{itemize}
+        \item Create 6 \texttt{IndexFlatL2} indices (exact search)
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Index Building}
+
+\textbf{Theo codebase hiện tại}, method \texttt{build\_indices\_from\_db()}:
+
+\begin{enumerate}
+    \item \textbf{Job indices}:
+    \begin{itemize}
+        \item Query all jobs từ \texttt{JobDescriptionTwoTower} table
+        \item Extract 3 embeddings cho mỗi job: \texttt{title\_embedding}, \texttt{skills\_embedding}, \texttt{requirement\_embedding}
+        \item Convert to numpy arrays: \texttt{np.array(embedding, dtype=np.float32)}
+        \item Normalize vectors: \texttt{\_normalize\_vectors()}
+        \item Add vectors vào 3 job indices: \texttt{index.add(matrix)}
+        \item Store ID mappings: \texttt{job\_title\_id\_map[i] = job.job\_id}
+    \end{itemize}
+    
+    \item \textbf{Candidate indices}: Tương tự cho candidates với 3 embeddings
+\end{enumerate}
+
+\subsubsection{Vector Normalization}
+
+\textbf{Theo codebase hiện tại}, method \texttt{\_normalize\_vectors()}:
+
+\begin{itemize}
+    \item Compute L2 norm: \texttt{np.linalg.norm(vectors, axis=1, keepdims=True)}
+    \item Handle zero vectors: \texttt{norms[norms == 0] = 1}
+    \item Normalize: \texttt{vectors / norms}
+    \item Return normalized vectors
+\end{itemize}
+
+\subsubsection{Search Operations}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{Method \texttt{search\_job\_by\_field()}}:
+    \begin{enumerate}
+        \item Select appropriate index và ID map dựa trên \texttt{field\_type} ('title', 'skills', 'requirement')
+        \item Check index exists và not empty
+        \item Prepare query vector:
+        \begin{itemize}
+            \item Convert to numpy: \texttt{np.array([query\_embedding], dtype=np.float32)}
+            \item Normalize vector
+        \end{itemize}
+        \item Set \texttt{ef\_search} cho HNSW: \texttt{index.hnsw.efSearch = ef\_search} (default: 128)
+        \item Search: \texttt{index.search(query\_vec, min(k, index.ntotal))}
+        \item Convert results:
+        \begin{itemize}
+            \item L2 distance → cosine similarity: \texttt{1.0 - (dist / 2.0)}
+            \item Clamp to [0, 1]
+            \item Map index position → job\_id
+        \end{itemize}
+        \item Return: \texttt{List[Tuple[str, float]]} - (job\_id, similarity\_score)
+    \end{enumerate}
+    
+    \item \textbf{Method \texttt{search\_candidate\_by\_field()}}: Tương tự cho candidates
+\end{itemize}
+
+\subsubsection{Index Persistence}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{Method \texttt{save\_indices()}}:
+    \begin{itemize}
+        \item Save 6 indices: \texttt{faiss.write\_index(index, path)}
+        \item Save 6 ID maps: \texttt{pickle.dump(id\_map, file)}
+        \item Files:
+        \begin{itemize}
+            \item \texttt{job\_title\_index.faiss}, \texttt{job\_title\_index.pkl}
+            \item \texttt{job\_skills\_index.faiss}, \texttt{job\_skills\_index.pkl}
+            \item \texttt{job\_requirement\_index.faiss}, \texttt{job\_requirement\_index.pkl}
+            \item \texttt{candidate\_title\_index.faiss}, \texttt{candidate\_title\_index.pkl}
+            \item \texttt{candidate\_skills\_index.faiss}, \texttt{candidate\_skills\_index.pkl}
+            \item \texttt{candidate\_experience\_index.faiss}, \texttt{candidate\_experience\_index.pkl}
+        \end{itemize}
+    \end{itemize}
+    
+    \item \textbf{Method \texttt{load\_indices()}}:
+    \begin{itemize}
+        \item Load 6 indices: \texttt{faiss.read\_index(path)}
+        \item Load 6 ID maps: \texttt{pickle.load(file)}
+        \item Rebuild reverse maps: \texttt{\{v: k for k, v in id\_map.items()\}}
+    \end{itemize}
+\end{itemize}
+
+\subsection{Rule-based Matching}
+
+\textbf{File}: \texttt{src/utils/rule\_matcher.py}
+
+\textbf{Theo codebase hiện tại}, class \texttt{RuleMatcher}:
+
+\subsubsection{Chức năng}
+
+\textbf{Theo codebase hiện tại}:
+\begin{itemize}
+    \item Enhanced rule-based matching cho CV-Job validation
+    \item Title similarity matching
+    \item Skills matching (exact, fuzzy, category-level)
+    \item Experience matching
+    \item Vietnamese text handling
+    \item Skill synonyms và translations
+\end{itemize}
+
+\subsubsection{Title Similarity Matching}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{Tokenize và normalize titles}:
+    \begin{itemize}
+        \item Lowercase
+        \item Remove special characters
+        \item Split into tokens
+    \end{itemize}
+    
+    \item \textbf{Compute similarity scores}:
+    \begin{itemize}
+        \item Exact match: Check exact string match (case-insensitive)
+        \item Token-level matching: Count matched tokens
+        \item Sequence similarity: \texttt{difflib.SequenceMatcher.ratio()}
+    \end{itemize}
+    
+    \item \textbf{Threshold}: \texttt{0.60} (60\%) để PASS
+    \item \textbf{Status}: Return "PASS" hoặc "FAIL"
+\end{itemize}
+
+\subsubsection{Skills Matching}
+
+\textbf{Theo codebase hiện tại}, có nhiều levels:
+
+\begin{enumerate}
+    \item \textbf{Exact matching}: 
+    \begin{itemize}
+        \item Exact string match (case-insensitive)
+        \item Normalize skills trước khi match
+    \end{itemize}
+    
+    \item \textbf{Fuzzy matching}:
+    \begin{itemize}
+        \item \texttt{SequenceMatcher.ratio() > 0.85}
+        \item Handle typos và variations
+    \end{itemize}
+    
+    \item \textbf{Category-level matching}:
+    \begin{itemize}
+        \item Match skills trong cùng category
+        \item Categories: \texttt{frontend}, \texttt{backend}, \texttt{devops}, \texttt{database}, \texttt{mobile}, \texttt{data}
+        \item Ví dụ: Nếu job yêu cầu "React" và candidate có "Vue" → match vì cùng category "frontend"
+    \end{itemize}
+    
+    \item \textbf{Synonym matching}:
+    \begin{itemize}
+        \item Sử dụng \texttt{SKILL\_SYNONYMS} dictionary
+        \item Ví dụ: "nodejs" match với "node.js", "node"
+    \end{itemize}
+    
+    \item \textbf{Vietnamese-English translation}:
+    \begin{itemize}
+        \item Sử dụng \texttt{VIETNAMESE\_ENGLISH\_SKILLS} mapping
+        \item Ví dụ: "ke toan" → ["accounting", "accountant", "bookkeeping"]
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{Skill Categories}
+
+\textbf{Theo codebase hiện tại}, có các categories được định nghĩa:
+
+\begin{itemize}
+    \item \texttt{frontend}: React, Vue, Angular, JavaScript, TypeScript, HTML, CSS, SCSS, Webpack, Vite, Babel, Tailwind, Bootstrap, Material-UI
+    \item \texttt{backend}: Python, Java, Node.js, Go, Rust, PHP, Ruby, C\#, .NET, Spring, Django, Flask, FastAPI, Express, NestJS, Laravel, Rails, ASP.NET
+    \item \texttt{devops}: AWS, Azure, GCP, Docker, Kubernetes, Jenkins, GitLab CI, GitHub Actions, Terraform, Ansible, Chef, Puppet, Prometheus, Grafana, ELK, Elasticsearch, Kibana
+    \item \texttt{database}: PostgreSQL, MySQL, MongoDB, Redis, Cassandra, Oracle, SQL Server, SQLite, DynamoDB, CouchDB
+    \item \texttt{mobile}: React Native, Flutter, iOS, Swift, Android, Kotlin, Objective-C, Xamarin, Ionic
+    \item \texttt{data}: Python, Pandas, NumPy, Spark, Hadoop, Kafka, Airflow, TensorFlow, PyTorch, Keras, scikit-learn
+\end{itemize}
+
+\subsubsection{Rule Scoring}
+
+\textbf{Theo codebase hiện tại}, rule matching trả về dictionary với:
+
+\begin{itemize}
+    \item \texttt{rule1}: Title similarity
+    \begin{itemize}
+        \item \texttt{score}: Similarity score (0-1)
+        \item \texttt{status}: "PASS" hoặc "FAIL"
+        \item \texttt{debug}: Token analysis, matched tokens
+    \end{itemize}
+    
+    \item \texttt{skill\_score}: Skills matching score
+    \begin{itemize}
+        \item Tính dựa trên số skills matched / total skills
+        \item Có weights cho different matching levels
+    \end{itemize}
+    
+    \item \texttt{final\_title\_score}: Final title score sau khi combine các factors
+    
+    \item \texttt{final\_status}: Overall status ("OK" hoặc "NG")
+    \begin{itemize}
+        \item "OK" nếu pass các rules
+        \item "NG" nếu fail
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Vietnamese Text Handling}
+
+\textbf{Theo codebase hiện tại}:
+
+\begin{itemize}
+    \item \textbf{Stopwords}: Có list \texttt{VIETNAMESE\_STOPWORDS} để filter
+    \item \textbf{Translation}: Sử dụng \texttt{VietnameseTranslator} để translate Vietnamese → English
+    \item \textbf{Skill mapping}: \texttt{VIETNAMESE\_ENGLISH\_SKILLS} dictionary cho common Vietnamese skills
+\end{itemize}
+
+\subsubsection{Generic Skills Blacklist}
+
+\textbf{Theo codebase hiện tại}, có \texttt{GENERIC\_SKILLS\_BLACKLIST}:
+
+\begin{itemize}
+    \item Filter common/generic skills: 'office', 'excel', 'word', 'powerpoint', 'english', 'communication', 'teamwork', 'leadership', 'problem solving', 'time management', 'microsoft office', 'ms office', 'basic computer', 'computer skills'
+    \item Chỉ match nếu specifically required trong job requirements
+\end{itemize}
+
+
