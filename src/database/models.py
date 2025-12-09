@@ -58,10 +58,164 @@ class ProcessedCandidateRecommendation(Base):
     experience_similarity = Column(Float)
     desired_job_similarity = Column(Float)
     rank = Column(Integer, nullable=False)  # Rank from 1-10
+    
+    # Explainability fields
+    rule_scores = Column(Text)  # JSON string: rule matching results
+    embedding_scores = Column(Text)  # JSON string: embedding similarity scores
+    explanation_text = Column(Text)  # Human-readable explanation
+    comprehensive_explanation = Column(Text)  # JSON string: full explanation with all levels
+    confidence_score = Column(Float)  # Final confidence score (0-1)
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
     __table_args__ = (
         Index('idx_processed_candidate_job', 'candidate_id', 'job_id', unique=True),
         Index('idx_processed_candidate_rank', 'candidate_id', 'rank'),
+        Index('idx_processed_candidate_confidence', 'confidence_score'),
+    )
+
+
+# ============================================================================
+# Multi-Field Embedding Models (3 separate embeddings per record)
+# ============================================================================
+
+class JobDescriptionMultiEmbedding(Base):
+    """Model for storing job description with 3 separate embeddings: title, skills, requirement."""
+    __tablename__ = "job_description_multi_embeddings"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    job_id = Column(String(100), unique=True, nullable=False, index=True)
+    title = Column(String(500), nullable=False)
+    skills = Column(Text)
+    requirement = Column(Text)  # Note: using 'requirement' (singular) to match user requirement
+    company = Column(String(200))
+    location = Column(String(200))
+    
+    # 3 separate embeddings
+    title_embedding = Column(ARRAY(Float), nullable=False)
+    skills_embedding = Column(ARRAY(Float), nullable=False)
+    requirement_embedding = Column(ARRAY(Float), nullable=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    embedding_timestamp = Column(DateTime(timezone=True), server_default=func.now(), 
+                                 comment='Timestamp when embedding was last computed')
+    content_hash = Column(String(64), comment='MD5 hash of content to detect changes')
+    
+    __table_args__ = (
+        Index('idx_job_multi_title_embedding', 'title_embedding', postgresql_using='gin'),
+        Index('idx_job_multi_skills_embedding', 'skills_embedding', postgresql_using='gin'),
+        Index('idx_job_multi_requirement_embedding', 'requirement_embedding', postgresql_using='gin'),
+        Index('idx_job_multi_embedding_timestamp', 'embedding_timestamp'),
+    )
+
+
+class CandidateMultiEmbedding(Base):
+    """Model for storing candidate with 3 separate embeddings: title (desired_job), skills, experience."""
+    __tablename__ = "candidate_multi_embeddings"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    candidate_id = Column(String(100), unique=True, nullable=False, index=True)
+    name = Column(String(200))
+    email = Column(String(200))
+    title = Column(String(500))  # desired_job or job title
+    skills = Column(Text)
+    experience = Column(Text)
+    
+    # 3 separate embeddings
+    title_embedding = Column(ARRAY(Float), nullable=False)
+    skills_embedding = Column(ARRAY(Float), nullable=False)
+    experience_embedding = Column(ARRAY(Float), nullable=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    embedding_timestamp = Column(DateTime(timezone=True), server_default=func.now(),
+                                 comment='Timestamp when embedding was last computed')
+    content_hash = Column(String(64), comment='MD5 hash of content to detect changes')
+    
+    __table_args__ = (
+        Index('idx_candidate_multi_title_embedding', 'title_embedding', postgresql_using='gin'),
+        Index('idx_candidate_multi_skills_embedding', 'skills_embedding', postgresql_using='gin'),
+        Index('idx_candidate_multi_experience_embedding', 'experience_embedding', postgresql_using='gin'),
+        Index('idx_candidate_multi_embedding_timestamp', 'embedding_timestamp'),
+    )
+
+
+# ============================================================================
+# Two-Tower Architecture Models
+# ============================================================================
+
+class JobDescriptionTwoTower(Base):
+    """Model for storing job description with 3 separate embeddings (Job Tower)."""
+    __tablename__ = "job_description_two_tower"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    job_id = Column(String(100), unique=True, nullable=False, index=True)
+    title = Column(String(500), nullable=False)
+    skills = Column(Text)
+    requirement = Column(Text)
+    company = Column(String(200))
+    location = Column(String(200))
+    
+    # 3 separate embeddings (Job Tower)
+    title_embedding = Column(ARRAY(Float), nullable=False)
+    skills_embedding = Column(ARRAY(Float), nullable=False)
+    requirement_embedding = Column(ARRAY(Float), nullable=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    __table_args__ = (
+        Index('idx_job_tt_title_embedding', 'title_embedding', postgresql_using='gin'),
+        Index('idx_job_tt_skills_embedding', 'skills_embedding', postgresql_using='gin'),
+        Index('idx_job_tt_requirement_embedding', 'requirement_embedding', postgresql_using='gin'),
+        Index('idx_job_tt_job_id', 'job_id'),
+    )
+
+
+class CandidateTwoTower(Base):
+    """Model for storing candidate with 3 separate embeddings (Candidate Tower)."""
+    __tablename__ = "candidate_two_tower"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    candidate_id = Column(String(100), unique=True, nullable=False, index=True)
+    name = Column(String(200))
+    email = Column(String(200))
+    title = Column(String(500))  # desired job title or current job title
+    skills = Column(Text)
+    experience = Column(Text)
+    
+    # 3 separate embeddings (Candidate Tower)
+    title_embedding = Column(ARRAY(Float), nullable=False)
+    skills_embedding = Column(ARRAY(Float), nullable=False)
+    experience_embedding = Column(ARRAY(Float), nullable=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    __table_args__ = (
+        Index('idx_candidate_tt_title_embedding', 'title_embedding', postgresql_using='gin'),
+        Index('idx_candidate_tt_skills_embedding', 'skills_embedding', postgresql_using='gin'),
+        Index('idx_candidate_tt_experience_embedding', 'experience_embedding', postgresql_using='gin'),
+        Index('idx_candidate_tt_candidate_id', 'candidate_id'),
+    )
+
+
+class ReindexTracking(Base):
+    """Model for tracking reindex operations."""
+    __tablename__ = "reindex_tracking"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    reindex_type = Column(String(50), nullable=False)  # 'full', 'incremental', 'job', 'candidate'
+    status = Column(String(20), nullable=False)  # 'pending', 'running', 'completed', 'failed'
+    total_records = Column(Integer)
+    processed_records = Column(Integer, default=0)
+    started_at = Column(DateTime(timezone=True))
+    completed_at = Column(DateTime(timezone=True))
+    error_message = Column(Text)
+    extra_metadata = Column(Text)  # JSON string (renamed from 'metadata' to avoid SQLAlchemy conflict)
+    
+    __table_args__ = (
+        Index('idx_reindex_status', 'status', 'started_at'),
     )

@@ -1,0 +1,603 @@
+
+Configuration:
+  Max Candidates: 3
+  Top K Jobs: 10
+  Output File: two_tower_test_vietnamese.txt
+
+1. Loading Two-Tower model...
+[OK] Model loaded
+
+2. Initializing Rule Matcher...
+[OK] Rule Matcher initialized
+
+3. Loading data from database...
+  Two-Tower repository failed: (psycopg2.errors.UndefinedTable) relation "candidate_two_tower" does not exist
+LINE 2: FROM candidate_two_tower
+             ^
+
+[SQL: SELECT candidate_two_tower.id AS candidate_two_tower_id, candidate_two_tower.candidate_id AS candidate_two_tower_candidate_id, candidate_two_tower.name AS candidate_two_tower_name, candidate_two_tower.email AS candidate_two_tower_email, candidate_two_tower.title AS candidate_two_tower_title, candidate_two_tower.skills AS candidate_two_tower_skills, candidate_two_tower.experience AS candidate_two_tower_experience, candidate_two_tower.title_embedding AS candidate_two_tower_title_embedding, candidate_two_tower.skills_embedding AS candidate_two_tower_skills_embedding, candidate_two_tower.experience_embedding AS candidate_two_tower_experience_embedding, candidate_two_tower.created_at AS candidate_two_tower_created_at, candidate_two_tower.updated_at AS candidate_two_tower_updated_at 
+FROM candidate_two_tower]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+  Using Multi-Field repository
+  Loaded 44963 candidates
+  Loaded 14634 jobs
+  Sampling 3 candidates
+
+4. Pre-computing job embeddings...
+  Computed embeddings for 14634 jobs
+
+====================================================================================================
+PROCESSING CANDIDATES
+====================================================================================================
+
+
+####################################################################################################
+CANDIDATE 1/3
+####################################################################################################
+
+================================================================================
+CANDIDATE INFO
+================================================================================
+ID: 10126
+Name: Lưu Công Quang
+Title: Nhân Viên Kỹ Thuật Điện - Điện Lạnh
+Skills (5): ['lắp đặt điện dân dụng', 'bảo trì hệ thống điện lạnh', 'đọc bản vẽ kỹ thuật', 'an toàn lao động', 'sử dụng công cụ chuyên dụng']
+Experience: Làm Thực tập sinh Kỹ thuật Điện - Điện lạnh trong 6 tháng tại Công ty TNHH Cơ điện lạnh Đăng Khoa.  Hỗ trợ lắp đặt và bảo dưỡng các thiết bị điều hòa không khí, hệ thống điện dân dụng.  Tham gia kiểm tra, sửa chữa các lỗi cơ bản dưới sự giám sát của kỹ sư.
+
+================================================================================
+TOP 10 JOB RECOMMENDATIONS
+================================================================================
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #1
+--------------------------------------------------------------------------------
+Job ID: 2873
+Title: Nhân Viên Sales Admin
+Company: Công ty TNHH IQI Việt Nam
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0967
+  Rule 1 - Title Score: 0.5556 (Status: FAIL)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.00 >= 0.8) despite low title similarity (55.56%)
+
+Job Requirements: • Có kinh nghiệm sales admin 1 năm trong ngành nghề bất động sản là lợi thế;• Có mạng lưới quan hệ rộng;• Khả năng đọc và hiểu các văn bản bằng tiếng anh là một lợi thế
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #2
+--------------------------------------------------------------------------------
+Job ID: 13072
+Title: Nhân viên Sales Admin
+Company: CP Phần mềm Truyền thông Quảng cáo Nhật Nguyên
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity: 0.0961
+  Rule 1 - Title Score: 0.5556 (Status: FAIL)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.00 >= 0.8) despite low title similarity (55.56%)
+
+Job Requirements: - Trình độ: Tốt nghiệp Cao đẳng trở lên - Có kỹ năng làm báo cáo, viết email. - Thành thạo tin học văn phòng: Word, Excel, ,… - Kỹ năng báo cáo, quản lý đơn hàng, hợp đồng - Ưu tiên có kinh nghiệm làm các công việc có tính chất tương đương.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #3
+--------------------------------------------------------------------------------
+Job ID: 5311
+Title: Nhân Viên Sale Admin
+Company: TỔNG CÔNG TY DỊCH VỤ VIỄN THÔNG
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0956
+  Rule 1 - Title Score: 0.5660 (Status: FAIL)
+  Rule 2 - Skill Score: 2.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 2.00 >= 0.8) despite low title similarity (56.60%)
+
+Job Requirements: Sử dụng thành thạo Word; Excel.Ưu tiên Ứng viên tốt nghiệp các chuyên ngành: Kỹ thuật, Công nghệ thông tin...Nhanh nhẹn, năng động, có tinh thần cầu tiến.Có khả năng làm việc áp lực, tinh thần làm việc nhóm Tốt
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #4
+--------------------------------------------------------------------------------
+Job ID: 4487
+Title: Nhân Viên Kinh Doanh - B2B Sales Consultant
+Company: CÔNG TY TNHH DAOUKIWOOM INNOVATION
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity: 0.0954
+  Rule 1 - Title Score: 0.4595 (Status: FAIL)
+  Rule 2 - Skill Score: 0.0000 (Status: FAIL)
+  Final Decision: NG
+  Reason: Cả title và skill không đạt: title score 45.95% < 60%, skill score 0.00 < 0.8
+
+Job Requirements: - Không yêu cầu kinh nghiệm, ứng viên có kinh nghiệm từ 06 tháng trở lên trong lĩnh vực Sale B2B là một lợi thế;- Yêu thích công việc tìm kiếm khách hàng và tư vấn khách hàng;- Giọng nói dễ nghe, rõ ràng và có khả năng thuyết phục khách hàng;- Chăm chỉ, kiên nhẫn và không ngại khi bị khách hàng từ chối.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #5
+--------------------------------------------------------------------------------
+Job ID: 12461
+Title: Chuyên viên Sale Admin - Biết tiếng anh
+Company: Công ty CP Tập đoàn Anpha Petrol.
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity: 0.0949
+  Rule 1 - Title Score: 0.4857 (Status: FAIL)
+  Rule 2 - Skill Score: 0.5000 (Status: FAIL)
+  Final Decision: NG
+  Reason: Cả title và skill không đạt: title score 48.57% < 60%, skill score 0.50 < 0.8
+
+Job Requirements: - Khả năng sử dụng tiếng anh tốt - Kỹ năng giao tiếp với khác hàng - Tư duy và xử lý công việc hiệu quả - Có thể đi công tá khi có yêu cầu của cấp quản lý
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #6
+--------------------------------------------------------------------------------
+Job ID: 9888
+Title: Nhân Viên Xử Lý Đơn Hàng
+Company: Công ty Cổ phần Bán lẻ Kỹ thuật số FPT
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0930
+  Rule 1 - Title Score: 0.5965 (Status: FAIL)
+  Rule 2 - Skill Score: 0.0000 (Status: FAIL)
+  Final Decision: NG
+  Reason: Cả title và skill không đạt: title score 59.65% < 60%, skill score 0.00 < 0.8
+
+Job Requirements: - Thành thạo vi tính văn phòng: Word, excel,... - Trung thực, cẩn thận, chịu khó, có trách nhiệm với công việc-Có kinh nghiệm xử lý đơn hàng là một lợi thế-Giọng nói lưu loát, dễ nghe
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #7
+--------------------------------------------------------------------------------
+Job ID: 381
+Title: Web Developers (Laravel, Reactjs ) Lương Upto 1500 Usd
+Company: CÔNG TY TNHH CÔNG NGHỆ VÀ DỊCH VỤ ENAI
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity: 0.0927
+  Rule 1 - Title Score: 0.2413 (Status: FAIL)
+  Rule 2 - Skill Score: 1.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.50 >= 0.8) despite low title similarity (24.13%)
+
+Job Requirements: Kỹ năng :- Yêu thích công nghệ, lập trình.- Đã từng làm vị trí tương đương.- Tinh thần trách nhiệm trong công việc cao.- Có khả năng gây ảnh hưởng, nâng cao tinh thần của members.- Mong muốn gắn bó lâu dài, trở thành key member của công ty.Kỹ thuật:- Có ít nhất 1 năm kinh nghiệm về PHP backend (framework: Laravel) hoặc frontend Javascript (frameworks: ReactJS/Vuejs hoặc NodeJS)- Ưu tiên các bạn gi... (truncated, total: 513)
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #8
+--------------------------------------------------------------------------------
+Job ID: 12753
+Title: SEO
+Company: Da集团
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0921
+  Rule 1 - Title Score: 0.2522 (Status: FAIL)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.00 >= 0.8) despite low title similarity (25.22%)
+
+Job Requirements: Tối ưu hoá công cụ tìm kiếm giúp tăng thứ hạng của website cty ( không yêu cầu tiếng nhưng phải tốt nghiệp IT và có nền tảng kỹ thuật)
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #9
+--------------------------------------------------------------------------------
+Job ID: 11430
+Title: NHÂN VIÊN MARKETING (SEO WEB)
+Company: CÔNG TY TNHH HUY THẢO
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0920
+  Rule 1 - Title Score: 0.4667 (Status: FAIL)
+  Rule 2 - Skill Score: 1.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.50 >= 0.8) despite low title similarity (46.67%)
+
+Job Requirements: - Trình độ: Tốt nghiệp cao đẳng trở lên về marketing hoặc lĩnh vực liên quan - Ít nhất 01 năm kinh nghiệm tại vị trí SEO, hiểu biết sâu các công cụ SEO, biết về code website là một lợi thế. - Đã SEO Web đạt thứ hạn top 3 trở lên. - Thành thạo Word, Excel, PowerPoint - Thời gian làm việc: 08h00 – 17h00 từ Thứ 2 đến thứ 7
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #10
+--------------------------------------------------------------------------------
+Job ID: 11339
+Title: Nhân Viên Sale Admin - Bán Hàng Biết Cắm hoa cơ bản
+Company: Cty TNHH Trái Cây Tươi Bery
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0907
+  Rule 1 - Title Score: 0.4634 (Status: FAIL)
+  Rule 2 - Skill Score: 0.0000 (Status: FAIL)
+  Final Decision: NG
+  Reason: Cả title và skill không đạt: title score 46.34% < 60%, skill score 0.00 < 0.8
+
+Job Requirements: - Có trách nhiệm với Công việc - Siêng năng và có tinh thần hợp tác - Tư duy và tinh thần ham học hỏi
+
+
+####################################################################################################
+CANDIDATE 2/3
+####################################################################################################
+
+================================================================================
+CANDIDATE INFO
+================================================================================
+ID: 6590
+Name: Võ Thị Kim Lan
+Title: Nhan Vien Phu Bep
+Skills (5): ['sơ chế và chuẩn bị nguyên liệu', 'sử dụng dụng cụ bếp chuyên dụng', 'vệ sinh an toàn thực phẩm', 'làm việc nhóm và chịu áp lực', 'nắm vững các kỹ thuật nấu ăn cơ bản']
+Experience: Nhân viên Phụ bếp với 4 năm kinh nghiệm tại Nhà hàng Món Việt Xưa, TP.HCM. - Hỗ trợ bếp trưởng và các đầu bếp chính trong việc sơ chế, chuẩn bị nguyên liệu cho hàng trăm suất ăn mỗi ngày. - Đảm bảo khu vực bếp luôn sạch sẽ, gọn gàng và tuân thủ nghiêm ngặt các quy định về vệ sinh an toàn thực phẩm.
+
+================================================================================
+TOP 10 JOB RECOMMENDATIONS
+================================================================================
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #1
+--------------------------------------------------------------------------------
+Job ID: 6365
+Title: Trưởng Nhóm Marketing
+Company: NHÀ SÁCH TIẾN THỌ
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity: 0.0969
+  Rule 1 - Title Score: 0.2825 (Status: FAIL)
+  Rule 2 - Skill Score: 2.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 2.50 >= 0.8) despite low title similarity (28.25%)
+
+Job Requirements: - Có ít nhất 2 năm kinh nghiệm ở vị trí tương đương; Ưu tiên ứng viên có kinh nghiệm về PR- Marketing trong lĩnh vực kinh doanh dịch vụ bán lẻ- Hiểu biết chuyên sâu về Digital Marketing Tools (Facebook, Google Ads, SEO, Analytics, Email Marketing, Youtube...)- Có khả năng làm việc ở cường độ cao và chịu áp lực tốt.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #2
+--------------------------------------------------------------------------------
+Job ID: 2873
+Title: Nhân Viên Sales Admin
+Company: Công ty TNHH IQI Việt Nam
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0966
+  Rule 1 - Title Score: 0.5789 (Status: FAIL)
+  Rule 2 - Skill Score: 0.5000 (Status: FAIL)
+  Final Decision: NG
+  Reason: Cả title và skill không đạt: title score 57.89% < 60%, skill score 0.50 < 0.8
+
+Job Requirements: • Có kinh nghiệm sales admin 1 năm trong ngành nghề bất động sản là lợi thế;• Có mạng lưới quan hệ rộng;• Khả năng đọc và hiểu các văn bản bằng tiếng anh là một lợi thế
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #3
+--------------------------------------------------------------------------------
+Job ID: 7411
+Title: Leader Digital Marketing (Lead Ads Thị Trường Đông Nam Á)
+Company: Công ty cổ phần đầu tư công nghệ Tâm An Finance
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity: 0.0957
+  Rule 1 - Title Score: 0.2942 (Status: FAIL)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.00 >= 0.8) despite low title similarity (29.42%)
+
+Job Requirements: - Có kinh nghiệm 2-3 năm trở lên trong lĩnh vực marketing, từng làm trưởng nhóm marketing từ 6 tháng trở lên là lợi thế- Thành thạo các công cụ ads- Có tư duy cập nhật
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #4
+--------------------------------------------------------------------------------
+Job ID: 11200
+Title: Tuyển Nhân Viên Sales Admin Trực Tiếp TPHCM
+Company: Công Ty Cổ Phần Balitic
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0954
+  Rule 1 - Title Score: 0.4000 (Status: FAIL)
+  Rule 2 - Skill Score: 1.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.50 >= 0.8) despite low title similarity (40.00%)
+
+Job Requirements: •Tốt nghiệp cao đẳng trở lên •Độ tuổi: 22t - 30t •Thái độ tốt, ham học hỏi và chủ động trong công việc •Có kinh nghiệm về Sales Admin, back office là điểm cộng
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #5
+--------------------------------------------------------------------------------
+Job ID: 13072
+Title: Nhân viên Sales Admin
+Company: CP Phần mềm Truyền thông Quảng cáo Nhật Nguyên
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity: 0.0949
+  Rule 1 - Title Score: 0.5789 (Status: FAIL)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.00 >= 0.8) despite low title similarity (57.89%)
+
+Job Requirements: - Trình độ: Tốt nghiệp Cao đẳng trở lên - Có kỹ năng làm báo cáo, viết email. - Thành thạo tin học văn phòng: Word, Excel, ,… - Kỹ năng báo cáo, quản lý đơn hàng, hợp đồng - Ưu tiên có kinh nghiệm làm các công việc có tính chất tương đương.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #6
+--------------------------------------------------------------------------------
+Job ID: 11430
+Title: NHÂN VIÊN MARKETING (SEO WEB)
+Company: CÔNG TY TNHH HUY THẢO
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0943
+  Rule 1 - Title Score: 0.5455 (Status: FAIL)
+  Rule 2 - Skill Score: 1.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.50 >= 0.8) despite low title similarity (54.55%)
+
+Job Requirements: - Trình độ: Tốt nghiệp cao đẳng trở lên về marketing hoặc lĩnh vực liên quan - Ít nhất 01 năm kinh nghiệm tại vị trí SEO, hiểu biết sâu các công cụ SEO, biết về code website là một lợi thế. - Đã SEO Web đạt thứ hạn top 3 trở lên. - Thành thạo Word, Excel, PowerPoint - Thời gian làm việc: 08h00 – 17h00 từ Thứ 2 đến thứ 7
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #7
+--------------------------------------------------------------------------------
+Job ID: 9223
+Title: Nhân Viên SEO Marketing (Quận 12)
+Company: CÔNG TY TNHH DỊCH VỤ KẾ TOÁN VÀ ĐẠI LÝ THUẾ QUANG HUY
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0942
+  Rule 1 - Title Score: 0.5000 (Status: FAIL)
+  Rule 2 - Skill Score: 2.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 2.50 >= 0.8) despite low title similarity (50.00%)
+
+Job Requirements: - Có 2 năm kinh nghiệm ở vị trí tương đương trở lên.- Nhanh nhẹn, tinh thần trách nhiệm công việc cao.- Kỹ năng viết bài, vốn từ phong phú, biết nắm bắt xu hướng nội dung mới (Trending).- Hiểu biết căn bản về SEO/Adwords và cách sáng tạo content.- Biết sử dụng các công cụ SEO cơ bản: Webmastertool, Analytics, Ahrefs, iView,…
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #8
+--------------------------------------------------------------------------------
+Job ID: 7060
+Title: Admin Dự Án
+Company: Công ty CP Đại Đồng Tiến
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0937
+  Rule 1 - Title Score: 0.3487 (Status: FAIL)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.00 >= 0.8) despite low title similarity (34.87%)
+
+Job Requirements: - Trình độ: Cao đẳng trở lên.- Có 1 năm kinh nghiệm trở lên tại ví trí Sale admin.- Có kinh nghiệm quản lý những đơn hàng dự án (Kênh B2B).- Ưu tiên ứng viên đã làm việc trong công ty sản xuất.- Thành thạo Excel, word, outlook,...- Tỉ mỉ, cẩn thận, cầu tiến.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #9
+--------------------------------------------------------------------------------
+Job ID: 381
+Title: Web Developers (Laravel, Reactjs ) Lương Upto 1500 Usd
+Company: CÔNG TY TNHH CÔNG NGHỆ VÀ DỊCH VỤ ENAI
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity: 0.0933
+  Rule 1 - Title Score: 0.1730 (Status: FAIL)
+  Rule 2 - Skill Score: 1.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.50 >= 0.8) despite low title similarity (17.30%)
+
+Job Requirements: Kỹ năng :- Yêu thích công nghệ, lập trình.- Đã từng làm vị trí tương đương.- Tinh thần trách nhiệm trong công việc cao.- Có khả năng gây ảnh hưởng, nâng cao tinh thần của members.- Mong muốn gắn bó lâu dài, trở thành key member của công ty.Kỹ thuật:- Có ít nhất 1 năm kinh nghiệm về PHP backend (framework: Laravel) hoặc frontend Javascript (frameworks: ReactJS/Vuejs hoặc NodeJS)- Ưu tiên các bạn gi... (truncated, total: 513)
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #10
+--------------------------------------------------------------------------------
+Job ID: 6296
+Title: Nhân Viên Chăm Sóc Khách Hàng (Customer Support Pod)
+Company: Bệnh Viện Đa Khoa Quốc Tế Thu Cúc – Chi Nhánh Công Ty Cổ Phần Y Khoa & Thẩm Mỹ Thu Cúc
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity: 0.0931
+  Rule 1 - Title Score: 0.3881 (Status: FAIL)
+  Rule 2 - Skill Score: 1.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.50 >= 0.8) despite low title similarity (38.81%)
+
+Job Requirements: - Trình độ: Tốt nghiệp trung cấp trở lên, ưu tiên có ít nhất 1 năm kinh nghiệm ở vị trí tương đương- Giọng nói chuẩn, truyển cảm, không ngọng, nói lắp- Cẩn thận, linh hoạt, nhanh nhẹn, giao tiếp tốt, có khả năng giải quyết vấn đề và xử lý tình huống
+
+
+####################################################################################################
+CANDIDATE 3/3
+####################################################################################################
+
+================================================================================
+CANDIDATE INFO
+================================================================================
+ID: 44229
+Name: Võ Thị Kim Ngân
+Title: Nhân Viên Kinh Doanh
+Skills (9): ['tìm kiếm khách hàng', 'tư vấn sản phẩm/dịch vụ', 'đàm phán', 'chốt sale', 'chăm sóc khách hàng', 'giao tiếp hiệu quả', 'ms office', 'tinh thần cầu tiến', 'giải quyết vấn đề']
+Experience: Sinh viên mới tốt nghiệp với nền tảng kiến thức vững chắc về kinh doanh và marketing. Đã tích lũy kinh nghiệm thực tế qua việc tham gia các dự án mô phỏng kinh doanh và thực tập bán hàng tại cửa hàng điện thoại di động FPT Shop, nơi đã học cách tiếp cận và tư vấn khách hàng hiệu quả.
+
+================================================================================
+TOP 10 JOB RECOMMENDATIONS
+================================================================================
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #1
+--------------------------------------------------------------------------------
+Job ID: 2873
+Title: Nhân Viên Sales Admin
+Company: Công ty TNHH IQI Việt Nam
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0924
+  Rule 1 - Title Score: 0.5854 (Status: FAIL)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.00 >= 0.8) despite low title similarity (58.54%)
+
+Job Requirements: • Có kinh nghiệm sales admin 1 năm trong ngành nghề bất động sản là lợi thế;• Có mạng lưới quan hệ rộng;• Khả năng đọc và hiểu các văn bản bằng tiếng anh là một lợi thế
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #2
+--------------------------------------------------------------------------------
+Job ID: 11200
+Title: Tuyển Nhân Viên Sales Admin Trực Tiếp TPHCM
+Company: Công Ty Cổ Phần Balitic
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0917
+  Rule 1 - Title Score: 0.4127 (Status: FAIL)
+  Rule 2 - Skill Score: 0.0000 (Status: FAIL)
+  Final Decision: NG
+  Reason: Cả title và skill không đạt: title score 41.27% < 60%, skill score 0.00 < 0.8
+
+Job Requirements: •Tốt nghiệp cao đẳng trở lên •Độ tuổi: 22t - 30t •Thái độ tốt, ham học hỏi và chủ động trong công việc •Có kinh nghiệm về Sales Admin, back office là điểm cộng
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #3
+--------------------------------------------------------------------------------
+Job ID: 11430
+Title: NHÂN VIÊN MARKETING (SEO WEB)
+Company: CÔNG TY TNHH HUY THẢO
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0908
+  Rule 1 - Title Score: 0.6383 (Status: PASS)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 63.83% >= 60%)
+
+Job Requirements: - Trình độ: Tốt nghiệp cao đẳng trở lên về marketing hoặc lĩnh vực liên quan - Ít nhất 01 năm kinh nghiệm tại vị trí SEO, hiểu biết sâu các công cụ SEO, biết về code website là một lợi thế. - Đã SEO Web đạt thứ hạn top 3 trở lên. - Thành thạo Word, Excel, PowerPoint - Thời gian làm việc: 08h00 – 17h00 từ Thứ 2 đến thứ 7
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #4
+--------------------------------------------------------------------------------
+Job ID: 430
+Title: Sales Admin
+Company: CÔNG TY TNHH THỜI TRANG SỨC KHỎE VIỆT
+Location: Bình Dương
+
+Matching Scores:
+  Two-Tower Similarity: 0.0907
+  Rule 1 - Title Score: 0.2581 (Status: FAIL)
+  Rule 2 - Skill Score: 0.0000 (Status: FAIL)
+  Final Decision: NG
+  Reason: Cả title và skill không đạt: title score 25.81% < 60%, skill score 0.00 < 0.8
+
+Job Requirements: - Có kinh nghiệm làm việc từ 1 năm ở vị trí tương đương- Năng động, chịu khó, ham học hỏi.- Chịu được áp lực công việc cao.- Tốt nghiệp Cao đẳng trở lên.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #5
+--------------------------------------------------------------------------------
+Job ID: 6365
+Title: Trưởng Nhóm Marketing
+Company: NHÀ SÁCH TIẾN THỌ
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity: 0.0905
+  Rule 1 - Title Score: 0.5078 (Status: FAIL)
+  Rule 2 - Skill Score: 0.5000 (Status: FAIL)
+  Final Decision: NG
+  Reason: Cả title và skill không đạt: title score 50.78% < 60%, skill score 0.50 < 0.8
+
+Job Requirements: - Có ít nhất 2 năm kinh nghiệm ở vị trí tương đương; Ưu tiên ứng viên có kinh nghiệm về PR- Marketing trong lĩnh vực kinh doanh dịch vụ bán lẻ- Hiểu biết chuyên sâu về Digital Marketing Tools (Facebook, Google Ads, SEO, Analytics, Email Marketing, Youtube...)- Có khả năng làm việc ở cường độ cao và chịu áp lực tốt.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #6
+--------------------------------------------------------------------------------
+Job ID: 13072
+Title: Nhân viên Sales Admin
+Company: CP Phần mềm Truyền thông Quảng cáo Nhật Nguyên
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity: 0.0902
+  Rule 1 - Title Score: 0.5854 (Status: FAIL)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.00 >= 0.8) despite low title similarity (58.54%)
+
+Job Requirements: - Trình độ: Tốt nghiệp Cao đẳng trở lên - Có kỹ năng làm báo cáo, viết email. - Thành thạo tin học văn phòng: Word, Excel, ,… - Kỹ năng báo cáo, quản lý đơn hàng, hợp đồng - Ưu tiên có kinh nghiệm làm các công việc có tính chất tương đương.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #7
+--------------------------------------------------------------------------------
+Job ID: 4487
+Title: Nhân Viên Kinh Doanh - B2B Sales Consultant
+Company: CÔNG TY TNHH DAOUKIWOOM INNOVATION
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity: 0.0902
+  Rule 1 - Title Score: 0.6557 (Status: PASS)
+  Rule 2 - Skill Score: 3.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 65.57% >= 60%)
+
+Job Requirements: - Không yêu cầu kinh nghiệm, ứng viên có kinh nghiệm từ 06 tháng trở lên trong lĩnh vực Sale B2B là một lợi thế;- Yêu thích công việc tìm kiếm khách hàng và tư vấn khách hàng;- Giọng nói dễ nghe, rõ ràng và có khả năng thuyết phục khách hàng;- Chăm chỉ, kiên nhẫn và không ngại khi bị khách hàng từ chối.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #8
+--------------------------------------------------------------------------------
+Job ID: 7060
+Title: Admin Dự Án
+Company: Công ty CP Đại Đồng Tiến
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0901
+  Rule 1 - Title Score: 0.3521 (Status: FAIL)
+  Rule 2 - Skill Score: 0.5000 (Status: FAIL)
+  Final Decision: NG
+  Reason: Cả title và skill không đạt: title score 35.21% < 60%, skill score 0.50 < 0.8
+
+Job Requirements: - Trình độ: Cao đẳng trở lên.- Có 1 năm kinh nghiệm trở lên tại ví trí Sale admin.- Có kinh nghiệm quản lý những đơn hàng dự án (Kênh B2B).- Ưu tiên ứng viên đã làm việc trong công ty sản xuất.- Thành thạo Excel, word, outlook,...- Tỉ mỉ, cẩn thận, cầu tiến.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #9
+--------------------------------------------------------------------------------
+Job ID: 11781
+Title: Sales Admin Làm Văn Phòng Mỹ Phẩm Cao Cấp
+Company: Công Ty Cổ Phần Balitic
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0900
+  Rule 1 - Title Score: 0.4128 (Status: FAIL)
+  Rule 2 - Skill Score: 0.0000 (Status: FAIL)
+  Final Decision: NG
+  Reason: Cả title và skill không đạt: title score 41.28% < 60%, skill score 0.00 < 0.8
+
+Job Requirements: •Tốt nghiệp cao đẳng trở lên •Độ tuổi: 22t - 30t •Thái độ tốt, ham học hỏi và chủ động trong công việc •Có kinh nghiệm về Sales Admin, back office là điểm cộng
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #10
+--------------------------------------------------------------------------------
+Job ID: 5380
+Title: Nhân Viên Thiết Kế Photoshop
+Company: CÔNG TY TNHH MỘT THÀNH VIÊN THƯƠNG MẠI DỊCH VỤ MAILISA
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity: 0.0899
+  Rule 1 - Title Score: 0.5833 (Status: FAIL)
+  Rule 2 - Skill Score: 1.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.50 >= 0.8) despite low title similarity (58.33%)
+
+Job Requirements: - Nam/Nữ tốt nghiệp Đại học, Cao đẳng chuyên ngành thiết kế đồ họa hoặc có ít nhất 2 năm kinh nghiệm trong lĩnh vực thiết kế.- Ưu tiên các ứng viên có kinh nghiệm trong lĩnh vực Digital marketing hoặc ít nhất 01 năm trong lĩnh vực làm đẹp, mỹ phẩm- Biết sử dụng thành thạo các phần mềm thiết kế như Photoshop, AI.- Có khả năng tư duy thẩm mỹ tốt, có khả năng sáng tạo.- Thành thạo sử dụng các phần mề... (truncated, total: 427)
+
+
+====================================================================================================
+TEST COMPLETED
+====================================================================================================
+Processed 3 candidates
+Recommended 10 jobs per candidate
+Results saved to: two_tower_test_vietnamese.txt

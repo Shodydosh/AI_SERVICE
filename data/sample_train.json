@@ -1,0 +1,48 @@
+{
+  "candidate_texts": [
+    "Software engineer with 5 years Python experience, FastAPI, PostgreSQL",
+    "Data scientist with ML background, TensorFlow, PyTorch",
+    "Backend developer with 3 years experience in microservices",
+    "Frontend developer with React and TypeScript expertise",
+    "DevOps engineer with Kubernetes and Docker experience"
+  ],
+  "job_texts": [
+    "Senior Python Developer - FastAPI, PostgreSQL, 5+ years",
+    "ML Engineer - TensorFlow, PyTorch, research background",
+    "Backend Engineer - Microservices, REST APIs, 3+ years",
+    "React Developer - TypeScript, modern frontend frameworks",
+    "DevOps Engineer - Kubernetes, Docker, CI/CD pipelines"
+  ],
+  "train_pairs": [
+    [
+      0,
+      0
+    ],
+    [
+      1,
+      1
+    ],
+    [
+      2,
+      2
+    ],
+    [
+      3,
+      3
+    ],
+    [
+      4,
+      4
+    ]
+  ],
+  "val_pairs": [
+    [
+      0,
+      0
+    ],
+    [
+      1,
+      1
+    ]
+  ]
+}

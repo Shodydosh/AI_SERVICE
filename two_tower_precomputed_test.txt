@@ -1,0 +1,284 @@
+
+Configuration:
+  Max Candidates: 1
+  Top K Jobs: 10
+  Output File: two_tower_precomputed_test.txt
+  Using: Precomputed embeddings from database
+
+1. Initializing Rule Matcher...
+[OK] Rule Matcher initialized
+
+2. Loading precomputed embeddings from database...
+  Loaded 44963 candidates with embeddings
+  Loaded 14634 jobs with embeddings
+  Sampling 1 candidates
+
+3. Loading job embeddings from database...
+  Loaded 14634 job embeddings from database
+  Embedding dimension: 768
+
+====================================================================================================
+PROCESSING CANDIDATES
+====================================================================================================
+
+
+####################################################################################################
+CANDIDATE 1/1
+####################################################################################################
+
+================================================================================
+CANDIDATE INFO
+================================================================================
+ID: 10126
+Name: Lưu Công Quang
+Title: Nhân Viên Kỹ Thuật Điện - Điện Lạnh
+Skills (5): ['lắp đặt điện dân dụng', 'bảo trì hệ thống điện lạnh', 'đọc bản vẽ kỹ thuật', 'an toàn lao động', 'sử dụng công cụ chuyên dụng']
+Experience: Làm Thực tập sinh Kỹ thuật Điện - Điện lạnh trong 6 tháng tại Công ty TNHH Cơ điện lạnh Đăng Khoa.  Hỗ trợ lắp đặt và bảo dưỡng các thiết bị điều hòa không khí, hệ thống điện dân dụng.  Tham gia kiểm tra, sửa chữa các lỗi cơ bản dưới sự giám sát của kỹ sư.
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Experience embedding: 768 dims
+
+================================================================================
+TOP 10 JOB RECOMMENDATIONS (Using Precomputed Embeddings)
+================================================================================
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #1
+--------------------------------------------------------------------------------
+Job ID: 7852
+Title: Nhân Viên Kỹ Thuật Điện - Điện Lạnh (Lắp Đặt - Bảo Dưỡng - Sửa Chữa)
+Company: Công ty Cổ phần đầu tư phát triển hạ tầng Thành Công
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8319
+  Rule 1 - Title Score: 0.8338 (Status: PASS)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 83.38% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Nam, có sức khỏe, nhanh nhẹn Ưu tiên có bằng Trung cấp điện /điện lạnh trở lên Gắn bó lâu dài với công ty
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #2
+--------------------------------------------------------------------------------
+Job ID: 5950
+Title: Nhân Viên Kỹ Thuật Điện, Điện Tử
+Company: CÔNG TY TNHH LIÊN DOANH DƯỢC PHẨM NUTRAMED
+Location: Bà Rịa Vũng Tàu
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8316
+  Rule 1 - Title Score: 0.9062 (Status: PASS)
+  Rule 2 - Skill Score: 2.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 90.62% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Giới tính Nam. Độ tuổi: từ 23 đến 35 tuổi.. Tốt nghiệp Cao đẳng trở lên chuyên ngành kỹ thuật : Cơ điện tử, Điện - điện tử, Tự động hóa,. Có kiến thức cơ bản về Điện/ Điện tự. Am hiểu về các thiết bị công nghiệp tự động hóa, hệ thống điều khiển tự động, biết vận hành hệ thống xử lý không khí HVAC.. Có thể đọc bảng vẽ kỹ thuật liên quan đến cơ khí, điện, điện tử.. Kinh nghiệm: Ít nhất 01 năm kinh n... (truncated, total: 503)
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #3
+--------------------------------------------------------------------------------
+Job ID: 3971
+Title: Nhân Viên Kỹ Thuật (Điện, Điện Tử)
+Company: CÔNG TY CỔ PHẦN NUTRAMED
+Location: Bà Rịa Vũng Tàu
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8281
+  Rule 1 - Title Score: 0.9062 (Status: PASS)
+  Rule 2 - Skill Score: 2.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 90.62% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Giới tính Nam. Độ tuổi: từ 23 đến 35 tuổi. Tốt nghiệp Cao đẳng trở lên chuyên ngành kỹ thuật Cơ điện tử, Điện - điện tử, Tự động hóa. Có kiến thức cơ bản về Điện/ Điện tự. Am hiểu về các thiết bị công nghiệp tự động hóa, hệ thống điều khiển tự động, biết vận hành hệ thống xử lý không khí HVAC. Có thể đọc bảng vẽ kỹ thuật liên quan đến cơ khí, điện, điện tử. Kinh nghiệm: Ít nhất 01 năm kinh nghiệm ... (truncated, total: 496)
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #4
+--------------------------------------------------------------------------------
+Job ID: 6854
+Title: Nhân Viên Kỹ Thuật Điện Lạnh
+Company: Công ty TNHH thương mại K&K Toàn Cầu
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8251
+  Rule 1 - Title Score: 1.0000 (Status: PASS)
+  Rule 2 - Skill Score: 2.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 100.00% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: - Tốt nghiệp từ Cao đẳng trở lên Chuyên nghành kỹ thuật điện lạnh. - Có ít nhất từ 01 năm kinh nghiệm (ưu tiên có kinh nghiệm làm việc trong các chuỗi siêu thị ). - Nhanh nhẹn, trung thực, nhiệt tình và có trách nhiệm với công việc.. - Ham học hỏi, sẵn sàng nhận nhiệm vụ khi được giao
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #5
+--------------------------------------------------------------------------------
+Job ID: 3599
+Title: Nhân Viên Kỹ Thuật Điện - Điện Điều Khiển
+Company: CÔNG TY TNHH THIẾT BỊ CƠ KHÍ TOÀN CẦU
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8213
+  Rule 1 - Title Score: 0.8887 (Status: PASS)
+  Rule 2 - Skill Score: 2.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 88.87% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: - Tốt nghiệp Trung cấp , Cao đẳng, Đại học chuyên ngành Điện – Điện tử, Kỹ thuật điện, Hệ thống điện, Thiết bị điện, Tự động hóa, Điều khiển tự động.- Có tối thiểu 3 năm kinh nghiệm làm việc ở các vị trí tương đương, sẽ được đào tạo trong quá trình làm việc.- Có kinh nghiệm sửa chữa, lắp đặt hệ thống điện, điều khiển, cho máy móc sản xuất trong ngành gia công, chế tạo cơ khí (máy cắt laser, máy ch... (truncated, total: 599)
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #6
+--------------------------------------------------------------------------------
+Job ID: 2835
+Title: Nhân Viên Kỹ Thuật Điện Dân Dụng
+Company: CÔNG TY TNHH XUẤT NHẬP KHẨU THƯƠNG MẠI THỊNH LONG
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8133
+  Rule 1 - Title Score: 0.8937 (Status: PASS)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 89.37% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: - Hiểu biết về các thiết bị điện dân dụng- Kinh nghiệm sửa chữa các thiết bị điện từ 3 năm trở lên- Tuổi từ 22 - 40 tuổi- Tốt nghiệp Trung cấp trở lên
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #7
+--------------------------------------------------------------------------------
+Job ID: 6318
+Title: Nhân Viên Kỹ Thuật Điện Dân Dụng
+Company: Công ty Cổ phần Đầu tư Thương mại Bách Tường Phát
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8133
+  Rule 1 - Title Score: 0.8937 (Status: PASS)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 89.37% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: - Có kinh nghiệm về thi công điện dân dụng.- Chăm chỉ, ham học hỏi- Có tinh thần trách nhiệm trong công việc.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #8
+--------------------------------------------------------------------------------
+Job ID: 7042
+Title: Nhân Viên Kỹ Thuật Điện Dân Dụng
+Company: CÔNG TY TNHH THƯƠNG MẠI VÀ DỊCH VỤ UNI VIỆT NAM
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8133
+  Rule 1 - Title Score: 0.8937 (Status: PASS)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 89.37% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: - Hiểu biết về các thiết bị điện dân dụng- Kinh nghiệm sửa chữa các thiết bị điện từ 3 năm trở lên- Tuổi từ 22-40 tuổi
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #9
+--------------------------------------------------------------------------------
+Job ID: 1843
+Title: Kỹ Sư Giám Sát Công Trình Kỹ Thuật Điện Nhẹ
+Company: CÔNG TY TNHH CÔNG NGHỆ THÔNG TIN FUJI
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8112
+  Rule 1 - Title Score: 0.7289 (Status: PASS)
+  Rule 2 - Skill Score: 0.5000 (Status: FAIL)
+  Final Decision: OK
+  Reason: Title strong match (score: 72.89% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Có ít nhất 2 năm kinh nghiệm ở vị trí tương đươngCó thể đi công trình tại TP. Hồ Chí Minh và các tỉnh lân cận (Long An, Bình Dương, Tây Ninh,...)Có tinh thần trách nhiệm cao
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #10
+--------------------------------------------------------------------------------
+Job ID: 5339
+Title: Chuyên Viên Kỹ Thuật (Cơ - Điện Lạnh)
+Company: Công ty TNHH Dược phẩm và TTBYT Hoàng Đức
+Location: Long An
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8109
+  Rule 1 - Title Score: 0.8349 (Status: PASS)
+  Rule 2 - Skill Score: 2.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 83.49% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: - Nam / Nữ sức khỏe tốt, ngoại hình cân đối dễ nhìn.- Học vấn: tốt nghiệp Trung cấp trở lên chuyên ngành Nhiệt - Lạnh, Môi trường / Xử lý khí thải...- Kinh nghiệm: từ 3 năm trở lên tại vị trí tương đương, ưu tiên kinh nghiệm về hệ thống Chiller/ahu/pau, VRV, Kho vaccine.- Hiểu biết hệ thống BMS, cấp thoát nước, PCCC.- Đọc hiểu bản vẽ hoàn công, sử dụng được Autocad, MS.Office và các phần mềm kỹ th... (truncated, total: 470)
+
+
+====================================================================================================
+STATISTICS
+====================================================================================================
+  Total similarity computations: 14634
+  Average similarity: 0.4105
+  Max similarity: 0.8319
+  Min similarity: 0.0230
+  Median similarity: 0.4009
+
+====================================================================================================
+TEST COMPLETED
+====================================================================================================
+Processed 1 candidates
+Recommended 10 jobs per candidate
+Results saved to: two_tower_precomputed_test.txt
+
+Note: All embeddings were loaded from database (precomputed)

@@ -1,0 +1,45 @@
+
+Configuration:
+  Max Candidates: 1
+  Top K Jobs: 1
+  Output File: test_logging_output.txt
+  Using: Precomputed embeddings from database
+
+1. Initializing Rule Matcher...
+[OK] Rule Matcher initialized
+
+2. Loading precomputed embeddings from database...
+  Loaded 44963 candidates with embeddings
+  Loaded 14634 jobs with embeddings
+  Sampling 1 candidates
+
+3. Loading job embeddings from database...
+  Loaded 14634 job embeddings from database
+  Embedding dimension: 768
+
+====================================================================================================
+PROCESSING CANDIDATES
+====================================================================================================
+
+
+####################################################################################################
+CANDIDATE 1/1
+####################################################################################################
+
+================================================================================
+CANDIDATE INFO
+================================================================================
+ID: 10126
+Name: Lưu Công Quang
+Title: Nhân Viên Kỹ Thuật Điện - Điện Lạnh
+Skills (5): ['lắp đặt điện dân dụng', 'bảo trì hệ thống điện lạnh', 'đọc bản vẽ kỹ thuật', 'an toàn lao động', 'sử dụng công cụ chuyên dụng']
+Experience: Làm Thực tập sinh Kỹ thuật Điện - Điện lạnh trong 6 tháng tại Công ty TNHH Cơ điện lạnh Đăng Khoa.  Hỗ trợ lắp đặt và bảo dưỡng các thiết bị điều hòa không khí, hệ thống điện dân dụng.  Tham gia kiểm tra, sửa chữa các lỗi cơ bản dưới sự giám sát của kỹ sư.
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Experience embedding: 768 dims
+
+================================================================================
+TOP 1 JOB RECOMMENDATIONS (Using Precomputed Embeddings)
+================================================================================

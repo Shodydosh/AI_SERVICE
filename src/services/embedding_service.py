@@ -1,278 +1,505 @@
-"""Service for managing embeddings."""
-from typing import List, Dict
-from sqlalchemy.orm import Session
-import pandas as pd
-from src.embeddings.generator import EmbeddingGenerator
-from src.embeddings.weighted_embedding import WeightedEmbeddingGenerator
-from src.data_processing.jd_processor import JDProcessor
-from src.data_processing.candidate_processor import CandidateProcessor
-from src.database.repository import EmbeddingRepository
+"""Optimized embedding service with caching and batch processing."""
+import hashlib
 import logging
+from typing import List, Dict, Optional, Tuple, Any
+from datetime import datetime, timedelta
+from sqlalchemy.orm import Session
+from sqlalchemy import and_
+import torch
+import numpy as np
+
+from src.services.embedding_cache_manager import get_cache_manager
+from src.database.multi_field_repository import MultiFieldEmbeddingRepository
+from src.database.models import (
+    CandidateMultiEmbedding,
+    JobDescriptionMultiEmbedding
+)
+from src.embeddings.candidate_tower_encoder import CandidateTowerEncoder
+from src.embeddings.job_tower_encoder import JobTowerEncoder
 
 logger = logging.getLogger(__name__)
 
 
-class EmbeddingService:
-    """Service for embedding operations."""
+class OptimizedEmbeddingService:
+    """
+    Optimized embedding service with:
+    - Smart caching (12-hour cycle)
+    - Batch processing
+    - Efficient PostgreSQL storage
+    - Non-blocking realtime queries
+    """
     
-    def __init__(self, db: Session, use_weighted: bool = True):
+    def __init__(
+        self,
+        db: Session,
+        cache_ttl_hours: float = 12.0,
+        batch_size: int = 100
+    ):
         """
         Initialize embedding service.
         
         Args:
             db: Database session
-            use_weighted: Whether to use weighted embeddings (default: True)
+            cache_ttl_hours: Cache TTL in hours (default: 12)
+            batch_size: Batch size for processing (default: 100)
         """
         self.db = db
-        self.use_weighted = use_weighted
-        if use_weighted:
-            self.embedding_generator = WeightedEmbeddingGenerator()
-            logger.info("Using weighted embedding generator")
-        else:
-            self.embedding_generator = EmbeddingGenerator()
-        self.repository = EmbeddingRepository(db)
+        self.repository = MultiFieldEmbeddingRepository(db)
+        self.cache = get_cache_manager(ttl_hours=cache_ttl_hours)
+        self.batch_size = batch_size
+        
+        # Lazy load encoders (only when needed)
+        self._candidate_encoder: Optional[CandidateTowerEncoder] = None
+        self._job_encoder: Optional[JobTowerEncoder] = None
     
-    def process_jd_dataset(self, file_path: str, file_type: str = "csv", batch_size: int = 1000) -> int:
-        """Process and store embeddings for JD dataset in batches.
+    @property
+    def candidate_encoder(self) -> CandidateTowerEncoder:
+        """Lazy load candidate encoder."""
+        if self._candidate_encoder is None:
+            self._candidate_encoder = CandidateTowerEncoder()
+        return self._candidate_encoder
+    
+    @property
+    def job_encoder(self) -> JobTowerEncoder:
+        """Lazy load job encoder."""
+        if self._job_encoder is None:
+            self._job_encoder = JobTowerEncoder()
+        return self._job_encoder
+    
+    def _compute_content_hash(self, title: str, skills: str, experience: str) -> str:
+        """Compute content hash for change detection."""
+        content = f"{title}|{skills}|{experience}"
+        return hashlib.md5(content.encode('utf-8')).hexdigest()
+    
+    def _compute_job_content_hash(self, title: str, skills: str, requirement: str) -> str:
+        """Compute content hash for job."""
+        content = f"{title}|{skills}|{requirement}"
+        return hashlib.md5(content.encode('utf-8')).hexdigest()
+    
+    def get_candidate_embedding(
+        self,
+        candidate_id: str,
+        title: str,
+        skills: Optional[str],
+        experience: Optional[str],
+        force_refresh: bool = False
+    ) -> Dict[str, List[float]]:
+        """
+        Get candidate embedding with caching.
         
         Args:
-            file_path: Path to the dataset file
-            file_type: Type of file (csv or json)
-            batch_size: Number of records to process and save at a time (default: 1000)
-        
+            candidate_id: Candidate ID
+            title: Candidate title
+            skills: Candidate skills
+            experience: Candidate experience
+            force_refresh: Force refresh even if cache is valid
+            
         Returns:
-            Total number of records processed
-        
-        Raises:
-            Exception: If database error occurs, processing stops immediately
+            Dict with title_embedding, skills_embedding, experience_embedding
         """
-        processor = JDProcessor()
+        content_hash = self._compute_content_hash(title or "", skills or "", experience or "")
         
-        if file_type.lower() == "csv":
-            processor.load_from_csv(file_path)
-        elif file_type.lower() == "json":
-            processor.load_from_json(file_path)
-        else:
-            raise ValueError(f"Unsupported file type: {file_type}")
+        # Check cache first (unless force refresh)
+        if not force_refresh:
+            cached = self.cache.get(candidate_id, 'candidate', content_hash)
+            if cached is not None:
+                logger.debug(f"Cache hit for candidate {candidate_id}")
+                return cached
         
-        if not processor.validate_data():
-            raise ValueError("JD dataset validation failed")
+        # Check database
+        db_record = self.repository.get_candidate_multi_embedding(candidate_id)
         
-        records = processor.get_records()
-        total_records = len(records)
+        if db_record and not force_refresh:
+            # Check if database embedding is still fresh
+            db_timestamp = db_record.embedding_timestamp or db_record.created_at
+            if db_timestamp:
+                age = datetime.now() - db_timestamp
+                if age < timedelta(hours=self.cache.cache_ttl_hours):
+                    # Check content hash
+                    if db_record.content_hash == content_hash:
+                        # Database embedding is fresh and content unchanged
+                        embeddings = {
+                            'title_embedding': db_record.title_embedding,
+                            'skills_embedding': db_record.skills_embedding,
+                            'experience_embedding': db_record.experience_embedding
+                        }
+                        # Cache it
+                        self.cache.set(candidate_id, 'candidate', embeddings, content_hash)
+                        logger.debug(f"Using fresh database embedding for candidate {candidate_id}")
+                        return embeddings
         
-        logger.info(f"Processing {total_records} job descriptions in batches of {batch_size}...")
+        # Need to compute new embedding
+        logger.info(f"Computing new embedding for candidate {candidate_id}")
+        embeddings = self.candidate_encoder.encode_candidate(
+            title=title,
+            skills=skills,
+            experience=experience
+        )
         
-        total_processed = 0
+        # Save to database (async/batch in production)
+        self._save_candidate_embedding(
+            candidate_id=candidate_id,
+            title=title,
+            skills=skills,
+            experience=experience,
+            embeddings=embeddings,
+            content_hash=content_hash
+        )
         
-        # Process in batches
-        for batch_start in range(0, total_records, batch_size):
-            batch_end = min(batch_start + batch_size, total_records)
-            batch_records = records[batch_start:batch_end]
-            
-            # Generate embeddings for this batch
-            logger.info(f"Generating embeddings for batch {batch_start//batch_size + 1} ({len(batch_records)} records)...")
-            
-            if self.use_weighted and isinstance(self.embedding_generator, WeightedEmbeddingGenerator):
-                # Use weighted embeddings for JD
-                batch_embeddings = []
-                for record in batch_records:
-                    field_texts = processor.get_field_texts(pd.Series(record))
-                    weights = WeightedEmbeddingGenerator.DEFAULT_JD_WEIGHTS
-                    embedding = self.embedding_generator.generate_weighted_embedding(
-                        field_texts=field_texts,
-                        weights=weights,
-                        method="repetition"
-                    )
-                    batch_embeddings.append(embedding)
-            else:
-                # Use standard embeddings
-                batch_texts = [processor.get_combined_text(pd.Series(record)) for record in batch_records]
-                batch_embeddings = self.embedding_generator.generate_embeddings_batch(batch_texts)
-            
-            # Prepare batch data for database
-            batch_data = []
-            for record, embedding in zip(batch_records, batch_embeddings):
-                # Helper function to safely extract and convert NaN to None
-                def safe_get(key, default=None):
-                    value = record.get(key, default)
-                    # Convert pandas NaN, numpy NaN, or empty strings to None
-                    if pd.isna(value) or value == '' or value == 'nan' or str(value).lower() == 'nan':
-                        return None
-                    # Convert to string and strip whitespace, return None if empty
-                    if isinstance(value, str):
-                        value = value.strip()
-                        return None if value == '' else value
-                    return value
-                
-                batch_data.append({
-                    'job_id': str(record.get('job_id', '')),
-                    'title': safe_get('title') or '',
-                    'description': safe_get('description') or '',
-                    'embedding': embedding,
-                    'company': safe_get('company'),
-                    'requirements': safe_get('requirements'),
-                    'location': safe_get('location')
-                })
-            
-            # Save batch to database - stop on error
-            try:
-                saved_count = self.repository.create_jd_embeddings_batch(batch_data, replace_existing=True)
-                total_processed += saved_count
-                logger.info(f"✓ Saved batch {batch_start//batch_size + 1}: {saved_count} records (Total: {total_processed}/{total_records})")
-            except Exception as e:
-                logger.error(f"✗ Database error saving batch {batch_start//batch_size + 1}: {e}")
-                logger.error(f"Stopping processing. Successfully processed {total_processed} records before error.")
-                raise  # Stop immediately on database error
+        # Cache it
+        self.cache.set(candidate_id, 'candidate', embeddings, content_hash)
         
-        logger.info(f"Successfully processed {total_processed} job descriptions")
-        return total_processed
+        return embeddings
     
-    def process_candidate_dataset(self, file_path: str, file_type: str = "csv", batch_size: int = 1000) -> int:
-        """Process and store embeddings for candidate dataset in batches.
+    def get_job_embedding(
+        self,
+        job_id: str,
+        title: str,
+        skills: Optional[str],
+        requirement: Optional[str],
+        force_refresh: bool = False
+    ) -> Dict[str, List[float]]:
+        """
+        Get job embedding with caching.
         
         Args:
-            file_path: Path to the dataset file
-            file_type: Type of file (csv or json)
-            batch_size: Number of records to process and save at a time (default: 1000)
-        
+            job_id: Job ID
+            title: Job title
+            skills: Job skills
+            requirement: Job requirement
+            force_refresh: Force refresh even if cache is valid
+            
         Returns:
-            Total number of records processed
-        
-        Raises:
-            Exception: If database error occurs, processing stops immediately
+            Dict with title_embedding, skills_embedding, requirement_embedding
         """
-        processor = CandidateProcessor()
+        content_hash = self._compute_job_content_hash(title or "", skills or "", requirement or "")
         
-        if file_type.lower() == "csv":
-            processor.load_from_csv(file_path)
-        elif file_type.lower() == "json":
-            processor.load_from_json(file_path)
-        else:
-            raise ValueError(f"Unsupported file type: {file_type}")
+        # Check cache first
+        if not force_refresh:
+            cached = self.cache.get(job_id, 'job', content_hash)
+            if cached is not None:
+                logger.debug(f"Cache hit for job {job_id}")
+                return cached
         
-        if not processor.validate_data():
-            raise ValueError("Candidate dataset validation failed")
+        # Check database
+        db_record = self.repository.get_job_multi_embedding(job_id)
         
-        records = processor.get_records()
-        total_records = len(records)
+        if db_record and not force_refresh:
+            # Check if database embedding is still fresh
+            db_timestamp = db_record.embedding_timestamp or db_record.created_at
+            if db_timestamp:
+                age = datetime.now() - db_timestamp
+                if age < timedelta(hours=self.cache.cache_ttl_hours):
+                    # Check content hash
+                    if db_record.content_hash == content_hash:
+                        # Database embedding is fresh and content unchanged
+                        embeddings = {
+                            'title_embedding': db_record.title_embedding,
+                            'skills_embedding': db_record.skills_embedding,
+                            'requirement_embedding': db_record.requirement_embedding
+                        }
+                        # Cache it
+                        self.cache.set(job_id, 'job', embeddings, content_hash)
+                        logger.debug(f"Using fresh database embedding for job {job_id}")
+                        return embeddings
         
-        logger.info(f"Processing {total_records} candidates in batches of {batch_size}...")
+        # Need to compute new embedding
+        logger.info(f"Computing new embedding for job {job_id}")
+        embeddings = self.job_encoder.encode_job(
+            title=title,
+            skills=skills,
+            requirements=requirement
+        )
         
-        total_processed = 0
+        # Save to database
+        self._save_job_embedding(
+            job_id=job_id,
+            title=title,
+            skills=skills,
+            requirement=requirement,
+            embeddings=embeddings,
+            content_hash=content_hash
+        )
         
-        # Process in batches
-        for batch_start in range(0, total_records, batch_size):
-            batch_end = min(batch_start + batch_size, total_records)
-            batch_records = records[batch_start:batch_end]
+        # Cache it
+        self.cache.set(job_id, 'job', embeddings, content_hash)
+        
+        return embeddings
+    
+    def _save_candidate_embedding(
+        self,
+        candidate_id: str,
+        title: str,
+        skills: Optional[str],
+        experience: Optional[str],
+        embeddings: Dict[str, List[float]],
+        content_hash: str
+    ):
+        """Save candidate embedding to database efficiently."""
+        try:
+            existing = self.repository.get_candidate_multi_embedding(candidate_id)
             
-            # Generate embeddings for this batch
-            logger.info(f"Generating embeddings for batch {batch_start//batch_size + 1} ({len(batch_records)} records)...")
-            
-            if self.use_weighted and isinstance(self.embedding_generator, WeightedEmbeddingGenerator):
-                # Use weighted embeddings for candidates with dynamic weights
-                batch_embeddings = []
-                for record in batch_records:
-                    field_texts = processor.get_field_texts(pd.Series(record))
-                    # Use dynamic weights to adjust based on available fields
-                    embedding = self.embedding_generator.generate_weighted_embedding(
-                        field_texts=field_texts,
-                        weights=None,  # Will use default and apply dynamic adjustment
-                        method="repetition",
-                        use_dynamic_weights=True  # Enable dynamic weight adjustment
-                    )
-                    batch_embeddings.append(embedding)
+            if existing:
+                # Update existing
+                existing.title = title
+                existing.skills = skills
+                existing.experience = experience
+                existing.title_embedding = embeddings['title_embedding']
+                existing.skills_embedding = embeddings['skills_embedding']
+                existing.experience_embedding = embeddings['experience_embedding']
+                existing.embedding_timestamp = datetime.now()
+                existing.content_hash = content_hash
+                existing.updated_at = datetime.now()
             else:
-                # Use standard embeddings
-                batch_texts = [processor.get_combined_text(pd.Series(record)) for record in batch_records]
-                batch_embeddings = self.embedding_generator.generate_embeddings_batch(batch_texts)
+                # Create new
+                from src.database.models import CandidateMultiEmbedding
+                candidate = CandidateMultiEmbedding(
+                    candidate_id=candidate_id,
+                    title=title,
+                    skills=skills,
+                    experience=experience,
+                    title_embedding=embeddings['title_embedding'],
+                    skills_embedding=embeddings['skills_embedding'],
+                    experience_embedding=embeddings['experience_embedding'],
+                    embedding_timestamp=datetime.now(),
+                    content_hash=content_hash
+                )
+                self.db.add(candidate)
             
-            # Prepare batch data for database
-            batch_data = []
-            for record, embedding in zip(batch_records, batch_embeddings):
-                # Helper function to safely extract and convert NaN to None
-                def safe_get(key, default=None):
-                    value = record.get(key, default)
-                    
-                    # Handle None
-                    if value is None:
-                        return None
-                    
-                    # Check for pandas/numpy NaN
-                    try:
-                        if pd.isna(value):
-                            return None
-                    except (TypeError, ValueError):
-                        pass
-                    
-                    # Convert to string and check for NaN strings (case-insensitive)
-                    str_value = str(value).strip()
-                    str_lower = str_value.lower()
-                    if str_value == '' or str_lower == 'nan' or str_lower == 'none' or str_lower == 'null':
-                        return None
-                    
-                    # Return cleaned string or original value
-                    return str_value if isinstance(value, str) else value
-                
-                candidate_id = str(record.get('candidate_id', ''))
-                name = safe_get('name')
-                email = safe_get('email')
-                skills = safe_get('skills')
-                
-                # Log first record of each batch for verification
-                if len(batch_data) == 0:
-                    logger.info(f"Sample record - ID: {candidate_id}, Name: {name}, Email: {email}, Skills: {skills[:50] if skills else 'None'}...")
-                
-                batch_data.append({
-                    'candidate_id': candidate_id,
-                    'embedding': embedding,
-                    'name': name,
-                    'email': email,
-                    'skills': skills,
-                    'experience': safe_get('experience'),
-                    'education': safe_get('education'),
-                    'summary': safe_get('summary'),
-                    'resume_text': safe_get('resume_text')
-                })
+            self.db.commit()
+            logger.debug(f"Saved embedding for candidate {candidate_id}")
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error saving candidate embedding {candidate_id}: {e}")
+            raise
+    
+    def _save_job_embedding(
+        self,
+        job_id: str,
+        title: str,
+        skills: Optional[str],
+        requirement: Optional[str],
+        embeddings: Dict[str, List[float]],
+        content_hash: str
+    ):
+        """Save job embedding to database efficiently."""
+        try:
+            existing = self.repository.get_job_multi_embedding(job_id)
             
-            # Save batch to database - stop on error
-            try:
-                saved_count = self.repository.create_candidate_embeddings_batch(batch_data, replace_existing=True)
-                total_processed += saved_count
-                logger.info(f"✓ Saved batch {batch_start//batch_size + 1}: {saved_count} records (Total: {total_processed}/{total_records})")
-            except Exception as e:
-                logger.error(f"✗ Database error saving batch {batch_start//batch_size + 1}: {e}")
-                logger.error(f"Stopping processing. Successfully processed {total_processed} records before error.")
-                raise  # Stop immediately on database error
+            if existing:
+                # Update existing
+                existing.title = title
+                existing.skills = skills
+                existing.requirement = requirement
+                existing.title_embedding = embeddings['title_embedding']
+                existing.skills_embedding = embeddings['skills_embedding']
+                existing.requirement_embedding = embeddings['requirement_embedding']
+                existing.embedding_timestamp = datetime.now()
+                existing.content_hash = content_hash
+                existing.updated_at = datetime.now()
+            else:
+                # Create new
+                from src.database.models import JobDescriptionMultiEmbedding
+                job = JobDescriptionMultiEmbedding(
+                    job_id=job_id,
+                    title=title,
+                    skills=skills,
+                    requirement=requirement,
+                    title_embedding=embeddings['title_embedding'],
+                    skills_embedding=embeddings['skills_embedding'],
+                    requirement_embedding=embeddings['requirement_embedding'],
+                    embedding_timestamp=datetime.now(),
+                    content_hash=content_hash
+                )
+                self.db.add(job)
+            
+            self.db.commit()
+            logger.debug(f"Saved embedding for job {job_id}")
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"Error saving job embedding {job_id}: {e}")
+            raise
+    
+    def batch_get_candidates_needing_refresh(
+        self,
+        limit: int = 1000
+    ) -> List[CandidateMultiEmbedding]:
+        """
+        Get candidates that need embedding refresh (older than 12 hours).
         
-        logger.info(f"Successfully processed {total_processed} candidates")
-        return total_processed
+        Args:
+            limit: Maximum number of candidates to return
+            
+        Returns:
+            List of candidates needing refresh
+        """
+        cutoff_time = datetime.now() - timedelta(hours=self.cache.cache_ttl_hours)
+        
+        return self.db.query(CandidateMultiEmbedding).filter(
+            (CandidateMultiEmbedding.embedding_timestamp < cutoff_time) |
+            (CandidateMultiEmbedding.embedding_timestamp.is_(None))
+        ).limit(limit).all()
     
-    def recommend_jobs_for_candidate(self, candidate_id: str, limit: int = 10) -> List[Dict]:
-        """Recommend jobs for a candidate."""
-        jobs = self.repository.recommend_jobs_for_candidate(candidate_id, limit)
-        return [
-            {
-                "job_id": job.job_id,
-                "title": job.title,
-                "company": job.company,
-                "location": job.location,
-                "description": job.description[:500] if job.description else None
-            }
-            for job in jobs
-        ]
+    def batch_get_jobs_needing_refresh(
+        self,
+        limit: int = 1000
+    ) -> List[JobDescriptionMultiEmbedding]:
+        """
+        Get jobs that need embedding refresh (older than 12 hours).
+        
+        Args:
+            limit: Maximum number of jobs to return
+            
+        Returns:
+            List of jobs needing refresh
+        """
+        cutoff_time = datetime.now() - timedelta(hours=self.cache.cache_ttl_hours)
+        
+        return self.db.query(JobDescriptionMultiEmbedding).filter(
+            (JobDescriptionMultiEmbedding.embedding_timestamp < cutoff_time) |
+            (JobDescriptionMultiEmbedding.embedding_timestamp.is_(None))
+        ).limit(limit).all()
     
-    def recommend_candidates_for_job(self, job_id: str, limit: int = 10) -> List[Dict]:
-        """Recommend candidates for a job."""
-        candidates = self.repository.recommend_candidates_for_job(job_id, limit)
-        return [
-            {
-                "candidate_id": candidate.candidate_id,
-                "name": candidate.name,
-                "email": candidate.email,
-                "skills": candidate.skills,
-                "summary": candidate.summary[:500] if candidate.summary else None
-            }
-            for candidate in candidates
-        ]
+    def batch_process_candidates(
+        self,
+        candidates: List[CandidateMultiEmbedding],
+        batch_size: Optional[int] = None
+    ) -> int:
+        """
+        Batch process candidates to refresh embeddings.
+        
+        Args:
+            candidates: List of candidates to process
+            batch_size: Batch size (default: self.batch_size)
+            
+        Returns:
+            Number of candidates processed
+        """
+        batch_size = batch_size or self.batch_size
+        processed = 0
+        
+        for i in range(0, len(candidates), batch_size):
+            batch = candidates[i:i + batch_size]
+            logger.info(f"Processing candidate batch {i//batch_size + 1} ({len(batch)} candidates)")
+            
+            for candidate in batch:
+                try:
+                    # Compute new embedding
+                    embeddings = self.candidate_encoder.encode_candidate(
+                        title=candidate.title or "",
+                        skills=candidate.skills,
+                        experience=candidate.experience
+                    )
+                    
+                    content_hash = self._compute_content_hash(
+                        candidate.title or "",
+                        candidate.skills or "",
+                        candidate.experience or ""
+                    )
+                    
+                    # Update database
+                    candidate.title_embedding = embeddings['title_embedding']
+                    candidate.skills_embedding = embeddings['skills_embedding']
+                    candidate.experience_embedding = embeddings['experience_embedding']
+                    candidate.embedding_timestamp = datetime.now()
+                    candidate.content_hash = content_hash
+                    candidate.updated_at = datetime.now()
+                    
+                    # Update cache
+                    self.cache.set(
+                        candidate.candidate_id,
+                        'candidate',
+                        embeddings,
+                        content_hash
+                    )
+                    
+                    processed += 1
+                except Exception as e:
+                    logger.error(f"Error processing candidate {candidate.candidate_id}: {e}")
+                    continue
+            
+            # Commit batch
+            try:
+                self.db.commit()
+                logger.info(f"Committed batch of {len(batch)} candidates")
+            except Exception as e:
+                self.db.rollback()
+                logger.error(f"Error committing batch: {e}")
+        
+        return processed
+    
+    def batch_process_jobs(
+        self,
+        jobs: List[JobDescriptionMultiEmbedding],
+        batch_size: Optional[int] = None
+    ) -> int:
+        """
+        Batch process jobs to refresh embeddings.
+        
+        Args:
+            jobs: List of jobs to process
+            batch_size: Batch size (default: self.batch_size)
+            
+        Returns:
+            Number of jobs processed
+        """
+        batch_size = batch_size or self.batch_size
+        processed = 0
+        
+        for i in range(0, len(jobs), batch_size):
+            batch = jobs[i:i + batch_size]
+            logger.info(f"Processing job batch {i//batch_size + 1} ({len(batch)} jobs)")
+            
+            for job in batch:
+                try:
+                    # Compute new embedding
+                    embeddings = self.job_encoder.encode_job(
+                        title=job.title or "",
+                        skills=job.skills,
+                        requirements=job.requirement
+                    )
+                    
+                    content_hash = self._compute_job_content_hash(
+                        job.title or "",
+                        job.skills or "",
+                        job.requirement or ""
+                    )
+                    
+                    # Update database
+                    job.title_embedding = embeddings['title_embedding']
+                    job.skills_embedding = embeddings['skills_embedding']
+                    job.requirement_embedding = embeddings['requirement_embedding']
+                    job.embedding_timestamp = datetime.now()
+                    job.content_hash = content_hash
+                    job.updated_at = datetime.now()
+                    
+                    # Update cache
+                    self.cache.set(
+                        job.job_id,
+                        'job',
+                        embeddings,
+                        content_hash
+                    )
+                    
+                    processed += 1
+                except Exception as e:
+                    logger.error(f"Error processing job {job.job_id}: {e}")
+                    continue
+            
+            # Commit batch
+            try:
+                self.db.commit()
+                logger.info(f"Committed batch of {len(batch)} jobs")
+            except Exception as e:
+                self.db.rollback()
+                logger.error(f"Error committing batch: {e}")
+        
+        return processed
+
+
+
+
+
+
+
 

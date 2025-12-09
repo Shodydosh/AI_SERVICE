@@ -14,4 +14,16 @@ faiss-cpu==1.7.4
 tqdm==4.66.1
 pyvi>=0.1.1
 apscheduler==3.10.4
+psutil==5.9.6
+scikit-learn==1.3.2
+torch>=2.0.0
+# Translation backends (choose one or more)
+# Option 1: argostranslate (offline, open source, recommended)
+argostranslate>=1.9.0
+# Option 2: EasyNMT (neural models, can run offline)
+# easynmt>=2.0.0
+# Option 3: transformers with Helsinki-NLP (high quality)
+# transformers>=4.20.0
+# Option 4: deep-translator (Google Translate, requires internet)
+# deep-translator>=1.11.4
 

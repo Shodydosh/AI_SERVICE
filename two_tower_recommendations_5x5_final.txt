@@ -1,0 +1,706 @@
+
+Configuration:
+  Max Candidates: 5
+  Top K Jobs: 5
+  Output File: two_tower_recommendations_5x5_final.txt
+  Using: Precomputed embeddings from database
+
+1. Initializing Rule Matcher...
+[OK] Rule Matcher initialized
+
+2. Loading precomputed embeddings from database...
+  Loaded 44963 candidates with embeddings
+  Loaded 14634 jobs with embeddings
+  Sampling 5 candidates
+
+3. Loading job embeddings from database...
+  Loaded 14634 job embeddings from database
+  Embedding dimension: 768
+
+====================================================================================================
+PROCESSING CANDIDATES
+====================================================================================================
+
+
+####################################################################################################
+CANDIDATE 1/5
+####################################################################################################
+
+================================================================================
+CANDIDATE INFO
+================================================================================
+ID: 10126
+Name: Lưu Công Quang
+Title: Nhân Viên Kỹ Thuật Điện - Điện Lạnh
+Skills (5): ['lắp đặt điện dân dụng', 'bảo trì hệ thống điện lạnh', 'đọc bản vẽ kỹ thuật', 'an toàn lao động', 'sử dụng công cụ chuyên dụng']
+Experience: Làm Thực tập sinh Kỹ thuật Điện - Điện lạnh trong 6 tháng tại Công ty TNHH Cơ điện lạnh Đăng Khoa.  Hỗ trợ lắp đặt và bảo dưỡng các thiết bị điều hòa không khí, hệ thống điện dân dụng.  Tham gia kiểm tra, sửa chữa các lỗi cơ bản dưới sự giám sát của kỹ sư.
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Experience embedding: 768 dims
+
+================================================================================
+TOP 5 JOB RECOMMENDATIONS (Using Precomputed Embeddings)
+================================================================================
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #1
+--------------------------------------------------------------------------------
+Job ID: 7852
+Title: Nhân Viên Kỹ Thuật Điện - Điện Lạnh (Lắp Đặt - Bảo Dưỡng - Sửa Chữa)
+Company: Công ty Cổ phần đầu tư phát triển hạ tầng Thành Công
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8319
+  Rule 1 - Title Score: 0.8338 (Status: PASS)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 83.38% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Nam, có sức khỏe, nhanh nhẹn Ưu tiên có bằng Trung cấp điện /điện lạnh trở lên Gắn bó lâu dài với công ty
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #2
+--------------------------------------------------------------------------------
+Job ID: 5950
+Title: Nhân Viên Kỹ Thuật Điện, Điện Tử
+Company: CÔNG TY TNHH LIÊN DOANH DƯỢC PHẨM NUTRAMED
+Location: Bà Rịa Vũng Tàu
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8316
+  Rule 1 - Title Score: 0.9062 (Status: PASS)
+  Rule 2 - Skill Score: 2.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 90.62% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Giới tính Nam. Độ tuổi: từ 23 đến 35 tuổi.. Tốt nghiệp Cao đẳng trở lên chuyên ngành kỹ thuật : Cơ điện tử, Điện - điện tử, Tự động hóa,. Có kiến thức cơ bản về Điện/ Điện tự. Am hiểu về các thiết bị công nghiệp tự động hóa, hệ thống điều khiển tự động, biết vận hành hệ thống xử lý không khí HVAC.. Có thể đọc bảng vẽ kỹ thuật liên quan đến cơ khí, điện, điện tử.. Kinh nghiệm: Ít nhất 01 năm kinh n... (truncated, total: 503)
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #3
+--------------------------------------------------------------------------------
+Job ID: 3971
+Title: Nhân Viên Kỹ Thuật (Điện, Điện Tử)
+Company: CÔNG TY CỔ PHẦN NUTRAMED
+Location: Bà Rịa Vũng Tàu
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8281
+  Rule 1 - Title Score: 0.9062 (Status: PASS)
+  Rule 2 - Skill Score: 2.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 90.62% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Giới tính Nam. Độ tuổi: từ 23 đến 35 tuổi. Tốt nghiệp Cao đẳng trở lên chuyên ngành kỹ thuật Cơ điện tử, Điện - điện tử, Tự động hóa. Có kiến thức cơ bản về Điện/ Điện tự. Am hiểu về các thiết bị công nghiệp tự động hóa, hệ thống điều khiển tự động, biết vận hành hệ thống xử lý không khí HVAC. Có thể đọc bảng vẽ kỹ thuật liên quan đến cơ khí, điện, điện tử. Kinh nghiệm: Ít nhất 01 năm kinh nghiệm ... (truncated, total: 496)
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #4
+--------------------------------------------------------------------------------
+Job ID: 6854
+Title: Nhân Viên Kỹ Thuật Điện Lạnh
+Company: Công ty TNHH thương mại K&K Toàn Cầu
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8251
+  Rule 1 - Title Score: 1.0000 (Status: PASS)
+  Rule 2 - Skill Score: 2.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 100.00% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: - Tốt nghiệp từ Cao đẳng trở lên Chuyên nghành kỹ thuật điện lạnh. - Có ít nhất từ 01 năm kinh nghiệm (ưu tiên có kinh nghiệm làm việc trong các chuỗi siêu thị ). - Nhanh nhẹn, trung thực, nhiệt tình và có trách nhiệm với công việc.. - Ham học hỏi, sẵn sàng nhận nhiệm vụ khi được giao
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #5
+--------------------------------------------------------------------------------
+Job ID: 3599
+Title: Nhân Viên Kỹ Thuật Điện - Điện Điều Khiển
+Company: CÔNG TY TNHH THIẾT BỊ CƠ KHÍ TOÀN CẦU
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.8213
+  Rule 1 - Title Score: 0.8887 (Status: PASS)
+  Rule 2 - Skill Score: 2.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 88.87% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: - Tốt nghiệp Trung cấp , Cao đẳng, Đại học chuyên ngành Điện – Điện tử, Kỹ thuật điện, Hệ thống điện, Thiết bị điện, Tự động hóa, Điều khiển tự động.- Có tối thiểu 3 năm kinh nghiệm làm việc ở các vị trí tương đương, sẽ được đào tạo trong quá trình làm việc.- Có kinh nghiệm sửa chữa, lắp đặt hệ thống điện, điều khiển, cho máy móc sản xuất trong ngành gia công, chế tạo cơ khí (máy cắt laser, máy ch... (truncated, total: 599)
+
+
+####################################################################################################
+CANDIDATE 2/5
+####################################################################################################
+
+================================================================================
+CANDIDATE INFO
+================================================================================
+ID: 6590
+Name: Võ Thị Kim Lan
+Title: Nhan Vien Phu Bep
+Skills (5): ['sơ chế và chuẩn bị nguyên liệu', 'sử dụng dụng cụ bếp chuyên dụng', 'vệ sinh an toàn thực phẩm', 'làm việc nhóm và chịu áp lực', 'nắm vững các kỹ thuật nấu ăn cơ bản']
+Experience: Nhân viên Phụ bếp với 4 năm kinh nghiệm tại Nhà hàng Món Việt Xưa, TP.HCM. - Hỗ trợ bếp trưởng và các đầu bếp chính trong việc sơ chế, chuẩn bị nguyên liệu cho hàng trăm suất ăn mỗi ngày. - Đảm bảo khu vực bếp luôn sạch sẽ, gọn gàng và tuân thủ nghiêm ngặt các quy định về vệ sinh an toàn thực phẩm.
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Experience embedding: 768 dims
+
+================================================================================
+TOP 5 JOB RECOMMENDATIONS (Using Precomputed Embeddings)
+================================================================================
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #1
+--------------------------------------------------------------------------------
+Job ID: 14054
+Title: Cloudeats Tuyển dụng Bếp Chính làm việc tại Quận 2, Tân Phú, Tân Bình, Gò Vấp
+Company: Tnhh Rbox
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.6815
+  Rule 1 - Title Score: 0.4040 (Status: FAIL)
+  Rule 2 - Skill Score: 1.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.50 >= 0.8) despite low title similarity (40.40%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Ít nhất 1 năm kinh nghiệm ở vị trí Bếp Chính hoặc 2-3 năm kinh nghiệm ở vị trí Phụ bếpKhéo tay, sạch sẽ, yêu thích công việc nấu nướngSức khỏe tốtChăm chỉ, ham học hỏi, có tinh thần trách nhiệm cao và chịu được áp lực công việc Thời gian làm việc 2loại ca:xoay 3 ca (sáng, chiều, tối) : Xoay 3 ca: Ca 1: 6:00 – 14:00 Ca 2: 14:00 – 22:00 Ca 3: 22:00 – 06:00 & xoay 2 ca (sáng & chiều): Ca 1: 6:00 – 14... (truncated, total: 423)
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #2
+--------------------------------------------------------------------------------
+Job ID: 2936
+Title: Giám Sát Bếp
+Company: Khách sạn Mường Thanh Hà Nội Centre
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.6570
+  Rule 1 - Title Score: 0.4138 (Status: FAIL)
+  Rule 2 - Skill Score: 2.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 2.00 >= 0.8) despite low title similarity (41.38%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: - Có văn bằng/ chứng chỉ liên quan đến nghề chế biến món ăn do cơ quan có thẩm quyền cấp.. - Có ít nhất 2 năm kinh nghiệm ở vị trí Trưởng ca hoặc Nhân viên bếp bậc 2 ở các khách sạn tương đương. - Có đạo đức nghề nghiệp, Nhiệt tình, Chịu khó học hỏi, Chủ động và Tuân thủ.. - Thành thạo tin học văn phòng- Có kiến thức cơ bản về quy trình sản xuất, chế biến món ăn, quy tắc bảo quản nguyên liệu, thực... (truncated, total: 423)
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #3
+--------------------------------------------------------------------------------
+Job ID: 2338
+Title: Nhân Viên Bếp (Chuyên Món Á - Âu)
+Company: CÔNG TY TNHH DỊCH VỤ GIẢI TRÍ TNT GROUP
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.6464
+  Rule 1 - Title Score: 0.5909 (Status: FAIL)
+  Rule 2 - Skill Score: 1.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.50 >= 0.8) despite low title similarity (59.09%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Tốt nghiệp từ trung cấp trở lênTrên ít nhất 1 năm kinh nghiệm ở vị trí BếpCó kinh nghiệm trong lĩnh vực nhà hàng kết hợp Á - ÂuChứng chỉ nấu ăn chuyên nghiệp đã được chứng minh và kinh nghiệm làm Bếp là một lợi thếKỹ năng quản lý và xử lý tình huống tốt
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #4
+--------------------------------------------------------------------------------
+Job ID: 13062
+Title: Đầu Bếp
+Company: Lien Minh Group
+Location: Lâm Đồng
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.6442
+  Rule 1 - Title Score: 0.5000 (Status: FAIL)
+  Rule 2 - Skill Score: 2.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 2.50 >= 0.8) despite low title similarity (50.00%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Có kinh nghiệm đứng bếp ít nhất 1 năm, biết chế biến nhiều món ăn và trình bày đẹp mắt, sạch sẽ, cẩn thận. - Nắm vững kiến thức cơ bản của các nguyên tắc trong nấu ăn. - Có trách nhiệm, sức khỏe, năng động, nhiệt tình, chịu được áp lực... - Có bằng cấp, chứng chỉ đào tạo nghề, nấu ăn, chế biến thực phẩm.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #5
+--------------------------------------------------------------------------------
+Job ID: 13196
+Title: Đầu Bếp
+Company: Vịt Quay Da Giòn Trần Ký
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.6442
+  Rule 1 - Title Score: 0.5000 (Status: FAIL)
+  Rule 2 - Skill Score: 1.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.50 >= 0.8) despite low title similarity (50.00%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: ⭐TUYỂN ĐẦU BẾP LÀM 10 GIỜ (NAM/NỮ) Thời gian: 8:00 sáng - 2:00 chiều, 4:00 chiều - 7:00 tối Lương: 9.000.000đ-12.000.000đ, đầu bếp có kinh nghiệm thỏa thuận theo năng lực. được deal lương khi trao đổi với nhau ⭐Công việc: - Nấu cơm, nấu canh, phụ bán và làm việc trong bếp ⭐Tuyển phục vụ nam nữ làm 10 giờ Thời gian: 8:00 sáng - 2:00 chiều, 4:00 chiều - 7:00 tối Lương: 7.000.000đ - 9.000.000đ ⭐Công ... (truncated, total: 547)
+
+
+####################################################################################################
+CANDIDATE 3/5
+####################################################################################################
+
+================================================================================
+CANDIDATE INFO
+================================================================================
+ID: 44229
+Name: Võ Thị Kim Ngân
+Title: Nhân Viên Kinh Doanh
+Skills (9): ['tìm kiếm khách hàng', 'tư vấn sản phẩm/dịch vụ', 'đàm phán', 'chốt sale', 'chăm sóc khách hàng', 'giao tiếp hiệu quả', 'ms office', 'tinh thần cầu tiến', 'giải quyết vấn đề']
+Experience: Sinh viên mới tốt nghiệp với nền tảng kiến thức vững chắc về kinh doanh và marketing. Đã tích lũy kinh nghiệm thực tế qua việc tham gia các dự án mô phỏng kinh doanh và thực tập bán hàng tại cửa hàng điện thoại di động FPT Shop, nơi đã học cách tiếp cận và tư vấn khách hàng hiệu quả.
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Experience embedding: 768 dims
+
+================================================================================
+TOP 5 JOB RECOMMENDATIONS (Using Precomputed Embeddings)
+================================================================================
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #1
+--------------------------------------------------------------------------------
+Job ID: 1712
+Title: Nhân Viên Kinh Doanh Phần Mềm
+Company: CÔNG TY TNHH MEDIASTEP SOFTWARE VIỆT NAM
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.7673
+  Rule 1 - Title Score: 0.9339 (Status: PASS)
+  Rule 2 - Skill Score: 4.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 93.39% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Có ít nhất 1 năm kinh nghiệm ở vị trí Nhân viên Kinh Doanh, Sales, Telesales, Tư vấn,... Có hoài bão và định hướng nghề nghiệp rõ ràng, có đam mê kiếm tiền. Giao tiếp tốt, chăm chỉ, không ngại học hỏi, lăn xả, có trách nhiệm với công việc.Có khả năng tư vấn/chốt đơn, đàm phán và thuyết phục khách hàng tốt.Có Laptop để làm việc (Nếu ứng viên ở Tỉnh).
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #2
+--------------------------------------------------------------------------------
+Job ID: 13149
+Title: Nhân Viên Kinh Doanh - Chuyên Viên Tư Vấn
+Company: CÔNG TY CỔ PHẦN EXIM PREMIUM
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.7657
+  Rule 1 - Title Score: 0.8654 (Status: PASS)
+  Rule 2 - Skill Score: 3.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 86.54% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: • Có laptop để làm việc • Có xe máy để duy chuyển. • Ham học hỏi, chăm chỉ, có tinh thần cầu tiến trong công việc • Kỹ năng đàm phán và thuyết phục ???? đam mê kinh doanh, đam mê với nghề ???? tuân thủ nội quy của công ty. -Khả năng giao tiếp tốt ,năng động và hoạt bát trong công việc, ngoại hình sáng sủa ưa nhìn, có chí cầu tiến, trách nhiệm với vị trí công việc của mình và quyết tâm cao trong cô... (truncated, total: 473)
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #3
+--------------------------------------------------------------------------------
+Job ID: 3769
+Title: Nhân Viên Tư Vấn Kinh Doanh - Lễ Tân
+Company: Nhất Tín Logistics
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.7645
+  Rule 1 - Title Score: 0.8250 (Status: PASS)
+  Rule 2 - Skill Score: 2.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 82.50% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Nữ; Tốt nghiệp Cao đẳng, ưu tiên chuyên ngành kinh tế, ngoại thương,....Ngoại hình ưa nhìnNhanh nhẹn, hoạt ngônCó kinh nghiệm lễ tân, tư vấn, chăm sóc khách hàngCó khả năng tiếng anh cơ bản là một điểm cộngThành thạo vi tính văn phòng
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #4
+--------------------------------------------------------------------------------
+Job ID: 8139
+Title: Thực Tập Sinh Kinh Doanh Phần Mềm
+Company: Công ty Công nghệ AISOLUTIONS
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.7528
+  Rule 1 - Title Score: 0.8307 (Status: PASS)
+  Rule 2 - Skill Score: 3.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 83.07% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Có hiểu biết chuyên môn về Bán phần mềm, đạt được thành tích thúc đẩy ở vị trí tương tự hoặc tự động khởi động trong quá trình về lĩnh vực nghệ thuật.Có khả năng khai triển hoàn thành hạn chế chế độKỹ năng giao tiếp và đàm phán xuất sắc, kết nối kỹ năng ·Nhạy bén trong kinh doanhCó kỹ năng, giải quyết vấn đề và quyết định xuất sắcChủ động, có tinh thần trách nhiệm với công việc được giao
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #5
+--------------------------------------------------------------------------------
+Job ID: 884
+Title: Quản Lý Kinh Doanh
+Company: CÔNG TY TNHH SẢN XUẤT - THƯƠNG MẠI - XUẤT NHẬP KHẨU MÓC ÁO DUY PHÁT
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.7523
+  Rule 1 - Title Score: 0.8717 (Status: PASS)
+  Rule 2 - Skill Score: 2.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 87.17% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: - Trình độ: Cao đẳng/ Đại học, chuyên ngành ngoại thương, marketing hoặc thương mại.- Tiếng Anh 4 kỹ năng nghe, nói, đọc, viết thành thạo.- Biết Tiếng Hoa, Tiếng Hàn cũng là 1 lợi thế.- Tuổi từ 25 đến 30 tuổi- Chịu được áp lực của công việc- Có phương tiện đi lại- Ưu tiên ứng viên từng làm việc trong lĩnh vực may mặc, kinh doanh xuất khẩu với các thị trường/ khách hàng nước ngoài. - Ưu tiên ứng vi... (truncated, total: 434)
+
+
+####################################################################################################
+CANDIDATE 4/5
+####################################################################################################
+
+================================================================================
+CANDIDATE INFO
+================================================================================
+ID: 15638
+Name: Hoàng Ngọc Huyền
+Title: Nhân Viên Cskh
+Skills (7): ['giọng nói rõ ràng, Dễ nghe', 'lắng nghe tích cực', 'kiên nhẫn và bình tĩnh', 'sẵn sàng học hỏi quy trình, Sản phẩm', 'làm việc theo nhóm']
+Experience: Hiện tại chưa có kinh nghiệm làm việc, nhưng em rất nhiệt tình, ham học hỏi và tin rằng mình có thể nhanh chóng thích nghi với môi trường làm việc chuyên nghiệp.
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Experience embedding: 768 dims
+
+================================================================================
+TOP 5 JOB RECOMMENDATIONS (Using Precomputed Embeddings)
+================================================================================
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #1
+--------------------------------------------------------------------------------
+Job ID: 7540
+Title: Nhân Viên QC Học Việc
+Company: Công ty cổ phần trang
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.6741
+  Rule 1 - Title Score: 0.6976 (Status: PASS)
+  Rule 2 - Skill Score: 0.0000 (Status: FAIL)
+  Final Decision: OK
+  Reason: Title strong match (score: 69.76% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Tốt nghiệp đại học/cao đẳng chuyên ngành công nghệ thực phẩm.Có kinh nghiệm QC trong lĩnh vực thực phẩm hoặc sinh viên mới ra trườngNhanh nhẹn, cẩn thận.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #2
+--------------------------------------------------------------------------------
+Job ID: 4477
+Title: Nhân Viên Lập Trình .Net
+Company: Công ty TNHH đầu tư công nghệ và dịch vụ Sconnect Việt Nam
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.6700
+  Rule 1 - Title Score: 0.6123 (Status: PASS)
+  Rule 2 - Skill Score: 1.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 61.23% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Ưu tiên tốt nghiệp Cao đẳng/Đại học trở lên hoặc các chương trình đào tạo tương đương các chuyên ngành Công nghệ thông tin, Điện tử viễn thông, Khoa học máy tính,...Thành thạo lập trình với ngôn ngữ .NetNắm vững lập trình OOP, MVCKinh nghiệm:Trên 6 tháng kinh nghiệm trong triển khai phần mềmCó kinh nghiệm làm việc với các kỹ thuật Framework MVC, .NET framework, .NET core, Web serviceCó kiến thức t... (truncated, total: 533)
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #3
+--------------------------------------------------------------------------------
+Job ID: 11016
+Title: Thực Tập Sinh Nhân Sự - Làm việc ngay
+Company: Công ty TNHH Thương Mại Nhơn Mỹ
+Location: Hồ Chí Minh
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.6676
+  Rule 1 - Title Score: 0.4995 (Status: FAIL)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Skill match đủ mạnh (score: 1.00 >= 0.8) despite low title similarity (49.95%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: - Là sinh viên, có laptop cá nhân để hỗ trợ công việc. - Có thể làm việc tối thiểu 72 buổi (6 buổi/tuần). - Đam mê yêu thích công việc, có tinh thần làm việc cao. - Năng động, nhiệt tình và trung thực.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #4
+--------------------------------------------------------------------------------
+Job ID: 8939
+Title: Nhân Viên QA/Cs
+Company: CÔNG TY TNHH THƯƠNG MẠI VÀ SẢN XUẤT BAO BÌ SÔNG LAM
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.6586
+  Rule 1 - Title Score: 0.8276 (Status: PASS)
+  Rule 2 - Skill Score: 0.5000 (Status: FAIL)
+  Final Decision: OK
+  Reason: Title strong match (score: 82.76% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Yêu cầu : Nam, nữCao đẳng trở lên. có 1 năm kinh nghiệm trở lênTrung thực, nhanh nhẹn, chăm chỉĐã từng làm QA, CS, hoặc patrol/auditThành thạo tin học văn phòngBiết tiếng anh là 1 lợi thế
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #5
+--------------------------------------------------------------------------------
+Job ID: 9263
+Title: Thực Tập Sinh Lập Trình Viên .Net
+Company: Công ty TNHH Digital Innovation
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.6516
+  Rule 1 - Title Score: 0.6190 (Status: PASS)
+  Rule 2 - Skill Score: 0.5000 (Status: FAIL)
+  Final Decision: OK
+  Reason: Title strong match (score: 61.90% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Có hiểu biết về nền tảng .NET, các kỹ thuật cơ bản trong .NET technology: C Sharp, MSSQL Server, DevexpressKỹ năng HTML, CSS, Javascript, MSSQLCó cam kết trong công việc, tuân thủ nội quy, yêu cầu của công tyChưa có kinh nghiệm sẽ được đào tạo tại công ty từ đầuSinh viên năm cuối hoặc mới tốt nghiệp Cao Đẳng, Đại Học chuyên ngành CNTT
+
+
+####################################################################################################
+CANDIDATE 5/5
+####################################################################################################
+
+================================================================================
+CANDIDATE INFO
+================================================================================
+ID: 37173
+Name: Hà Thế Vinh
+Title: Nhân Viên Kĩ Thuật
+Skills (6): ['vận hành máy in offset, Máy in kỹ thuật số', 'kiểm soát chất lượng sản phẩm in', 'khắc phục sự cố kỹ thuật máy in', 'kiến thức về vật liệu in và mực in', 'đọc hiểu bản vẽ kỹ thuật']
+Experience: Đã có 4 năm kinh nghiệm làm việc tại Công ty In và Bao bì Hà Nội với vai trò Nhân viên Kỹ thuật, chịu trách nhiệm vận hành và bảo trì các loại máy in công nghiệp. Thành thạo quy trình kiểm soát chất lượng sản phẩm in, đảm bảo sản phẩm đạt tiêu chuẩn kỹ thuật. Có kinh nghiệm trong việc khắc phục các lỗi kỹ thuật cơ bản, giảm thiểu thời gian dừng máy và tối ưu hóa hiệu suất sản xuất.
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Experience embedding: 768 dims
+
+================================================================================
+TOP 5 JOB RECOMMENDATIONS (Using Precomputed Embeddings)
+================================================================================
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #1
+--------------------------------------------------------------------------------
+Job ID: 128
+Title: Nhân Viên Kĩ Thuật
+Company: Công ty CP đầu tư thương mại và phát triển nông nghiệp ADI
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.7680
+  Rule 1 - Title Score: 1.0000 (Status: PASS)
+  Rule 2 - Skill Score: 1.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 100.00% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: •Tốt nghiệp cao đẳng/ đại học chuyên ngành nông nghiệp. •Sức khỏe tốt, Khả năng giao tiếp tốt. •Có thể công tác tại các tỉnh•Không yêu cầu kinh nghiệm, vào công ty sẽ được đào tạo.. •Đam mê công việc, nhiệt tình, hoà đồng.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #2
+--------------------------------------------------------------------------------
+Job ID: 7591
+Title: Quản Lỹ Kỹ Thuật
+Company: CÔNG TY TNHH THƯƠNG MẠI VÀ DỊCH VỤ ANP VIỆT NAM
+Location: Bắc Ninh
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.7527
+  Rule 1 - Title Score: 0.8241 (Status: PASS)
+  Rule 2 - Skill Score: 2.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 82.41% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Học các ngành về cơ khí động lực, công nghệ ô tôCó kinh nghiệm làm nghề sửa chữa tại các garaCó kinh nghiệm quản lý xưởng, quản lý đội nhóm kỹ thuật
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #3
+--------------------------------------------------------------------------------
+Job ID: 3808
+Title: Kỹ Thuật Vận Hành Máy Chấn
+Company: Công ty TNHH MTV Luxer
+Location: Ninh Bình
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.7516
+  Rule 1 - Title Score: 0.7559 (Status: PASS)
+  Rule 2 - Skill Score: 2.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 75.59% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: - Tốt nghiệp trung cấp trở lên.- Có tinh thần trách nhiệm, nhiệt tình, năng động trong công việc.. - Ưu tiên ứng viên đã có kinh nghiệm vận hành máy chấn.
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #4
+--------------------------------------------------------------------------------
+Job ID: 8629
+Title: Nhân Viên Kỹ Thuật Bảo Hành
+Company: Công ty cổ phần phương tiện điện thông minh Selex
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.7508
+  Rule 1 - Title Score: 0.8434 (Status: PASS)
+  Rule 2 - Skill Score: 3.0000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 84.34% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: - Nam, tuổi từ 18 đến dưới 40 tuổi;- Tốt nghiệp Trung cấp, Cao đẳng (hoặc Đại học) nghề điện, điện tự động, cơ khí, tự động hóa. Có kiến thức chuyên môn tốt, hiểu biết tổng quan về hệ thống cơ điện, cơ khí. Hiểu biết về xe máy, xe máy điện là lợi thế. Ưu tiên có kinh nghiệm sửa chữa xe máy điện hoặc xe máy/xe điện hoặc có kinh nghiệm làm trong gara ô tô…- Có sức khỏe tốt, chăm chỉ, nhanh nhẹn, nhi... (truncated, total: 693)
+
+--------------------------------------------------------------------------------
+RECOMMENDATION #5
+--------------------------------------------------------------------------------
+Job ID: 7564
+Title: Nhân Viên Bảo Trì - Kỹ Thuật
+Company: Circle K Viet Nam Ltd. Co.
+Location: Hà Nội
+
+Matching Scores:
+  Two-Tower Similarity (Precomputed): 0.7504
+  Rule 1 - Title Score: 0.8888 (Status: PASS)
+  Rule 2 - Skill Score: 1.5000 (Status: PASS)
+  Final Decision: OK
+  Reason: Title strong match (score: 88.88% >= 60%)
+
+Embedding Info:
+  Title embedding: 768 dims
+  Skills embedding: 768 dims
+  Requirement embedding: 768 dims
+
+Job Requirements: Tối thiểu tốt nghiệp trung cấp nghề .Tối thiểu 06 tháng - 1 năm kinh nghiệm làm việc liên quan;Thái độ làm việc tích cực;Khả năng làm việc dưới áp lực cao;Sẵn sàng làm việc vào chủ nhật, các ngày lễ và làm thêm giờ;Làm việc đội nhóm tốt;Tin học văn phòng (Word, Excel, Power Point,…);Trung thực, nhiệt huyết, năng động và nguyện vọng làm việc lâu dài.
+
+
+====================================================================================================
+STATISTICS
+====================================================================================================
+  Total similarity computations: 73170
+  Average similarity: 0.4544
+  Max similarity: 0.8319
+  Min similarity: 0.0230
+  Median similarity: 0.4522
+
+====================================================================================================
+TEST COMPLETED
+====================================================================================================
+Processed 5 candidates
+Recommended 5 jobs per candidate
+Results saved to: two_tower_recommendations_5x5_final.txt
+
+Note: All embeddings were loaded from database (precomputed)
