@@ -62,3 +62,11 @@ outputs_vo/
 indices/
 models/
 
+# README files
+README*
+readme*
+*README*
+
+# Markdown files
+*.md
+

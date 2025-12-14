@@ -316,6 +316,92 @@ class TwoTowerEvaluator:
         if 'experience_similarity_correlation' in metrics:
             logger.info(f"  Exp Correlation:    {metrics.get('experience_similarity_correlation', 0):.4f}")
         
+        # Clustering metrics
+        if 'candidate_best_silhouette' in metrics:
+            logger.info("\nClustering Metrics:")
+            logger.info(f"  Candidate Best Silhouette: {metrics.get('candidate_best_silhouette', 0):.4f}")
+            logger.info(f"  Job Best Silhouette: {metrics.get('job_best_silhouette', 0):.4f}")
+            logger.info(f"  Cluster Overlap Score: {metrics.get('cluster_overlap_score', 0):.4f}")
+        
+        # Adversarial metrics
+        if 'adversarial_robustness' in metrics:
+            logger.info("\nAdversarial Metrics:")
+            logger.info(f"  Overall Robustness: {metrics.get('adversarial_robustness', 0):.4f}")
+            logger.info(f"  Avg Similarity: {metrics.get('adversarial_avg_similarity', 0):.4f}")
+        
         logger.info("=" * 60)
+    
+    def integrate_clustering_metrics(
+        self,
+        clustering_results: Dict[str, any]
+    ) -> Dict[str, float]:
+        """
+        Integrate clustering evaluation metrics into evaluation results.
+        
+        Args:
+            clustering_results: Results from ClusteringEvaluator
+        
+        Returns:
+            Dictionary with integrated clustering metrics
+        """
+        metrics = {}
+        
+        # Extract best clustering metrics
+        if 'candidates' in clustering_results:
+            if 'combined' in clustering_results['candidates']:
+                cand_combined = clustering_results['candidates']['combined']
+                metrics['candidate_best_silhouette'] = cand_combined.get('best_silhouette', 0.0)
+                metrics['candidate_best_k'] = cand_combined.get('best_k', 0)
+        
+        if 'jobs' in clustering_results:
+            if 'combined' in clustering_results['jobs']:
+                job_combined = clustering_results['jobs']['combined']
+                metrics['job_best_silhouette'] = job_combined.get('best_silhouette', 0.0)
+                metrics['job_best_k'] = job_combined.get('best_k', 0)
+        
+        # Extract overlap metrics
+        if 'overlap' in clustering_results:
+            overlap = clustering_results['overlap']
+            metrics['cluster_overlap_score'] = overlap.get('overlap_score', 0.0)
+            metrics['cluster_cv_similarity'] = overlap.get('cv_similarity', 0.0)
+        
+        return metrics
+    
+    def integrate_adversarial_metrics(
+        self,
+        adversarial_results: Dict[str, any]
+    ) -> Dict[str, float]:
+        """
+        Integrate adversarial evaluation metrics into evaluation results.
+        
+        Args:
+            adversarial_results: Results from AdversarialEvaluator
+        
+        Returns:
+            Dictionary with integrated adversarial metrics
+        """
+        metrics = {}
+        
+        # Extract overall robustness
+        if 'overall_robustness' in adversarial_results:
+            overall = adversarial_results['overall_robustness']
+            if isinstance(overall, dict):
+                metrics['adversarial_robustness'] = overall.get('overall_robustness', 0.0)
+                metrics['adversarial_avg_similarity'] = overall.get('avg_similarity', 0.0)
+                metrics['adversarial_min_similarity'] = overall.get('min_similarity', 0.0)
+                metrics['adversarial_max_similarity'] = overall.get('max_similarity', 0.0)
+        
+        # Extract per-test-type metrics
+        test_types = ['typo_injection', 'synonym_replacement', 'keyword_removal', 'translation_roundtrip']
+        for test_type in test_types:
+            if test_type in adversarial_results:
+                test_results = adversarial_results[test_type]
+                if isinstance(test_results, list) and test_results:
+                    avg_robustness = np.mean([
+                        r.get('robustness_score', 0.0) for r in test_results if isinstance(r, dict)
+                    ])
+                    metrics[f'{test_type}_robustness'] = float(avg_robustness)
+        
+        return metrics
 
 
