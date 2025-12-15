@@ -5,7 +5,8 @@ import logging
 import numpy as np
 from src.embeddings.candidate_tower_encoder import CandidateTowerEncoder
 from src.embeddings.job_tower_encoder import JobTowerEncoder
-from src.database.two_tower_repository import TwoTowerRepository
+from src.database.cv_repository import CVRepository
+from src.database.job_repository import JobRepository
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,8 @@ class TwoTowerMatchingService:
                      Default: {'title': 0.4, 'skills': 0.4, 'experience': 0.2}
         """
         self.db = db
-        self.repository = TwoTowerRepository(db)
+        self.cv_repository = CVRepository(db)
+        self.job_repository = JobRepository(db)
         
         # Initialize encoders
         logger.info("Initializing Candidate and Job Tower encoders...")
@@ -158,24 +160,33 @@ class TwoTowerMatchingService:
         """
         logger.info(f"Two-Tower matching (3 embeddings) for candidate: {candidate_id}")
         
-        # Get candidate from database
-        candidate = self.repository.get_candidate(candidate_id)
-        if not candidate:
-            logger.error(f"Candidate {candidate_id} not found")
+        # Get CV from database
+        cv = self.cv_repository.get_cv(candidate_id)
+        if not cv:
+            logger.error(f"CV {candidate_id} not found")
             return []
         
-        # Encode candidate into 3 embeddings
-        logger.info("Encoding candidate into 3 embeddings...")
-        candidate_embs = self._encode_candidate_fields(
-            title=candidate.title,
-            skills=candidate.skills,
-            experience=candidate.experience
-        )
+        # Use embeddings from CV if available, otherwise encode
+        if cv.title_embedding and cv.skills_embedding and cv.experience_embedding:
+            logger.info("Using pre-computed embeddings from CV...")
+            candidate_embs = {
+                'title': np.array(cv.title_embedding, dtype=np.float32),
+                'skills': np.array(cv.skills_embedding, dtype=np.float32),
+                'experience': np.array(cv.experience_embedding, dtype=np.float32)
+            }
+        else:
+            # Encode candidate into 3 embeddings
+            logger.info("Encoding candidate into 3 embeddings...")
+            candidate_embs = self._encode_candidate_fields(
+                title=cv.title,
+                skills=", ".join([s.skillName for s in cv.skills]) if cv.skills else None,
+                experience="\n".join([we.description for we in cv.work_experiences if we.description]) if cv.work_experiences else None
+            )
         
-        # Get all jobs
-        all_jobs = self.repository.get_all_jobs()
+        # Get all jobs with embeddings
+        all_jobs = self.job_repository.get_all_jobs(with_embeddings=True)
         if not all_jobs:
-            logger.warning("No jobs found in database")
+            logger.warning("No jobs with embeddings found in database")
             return []
         
         logger.info(f"Computing similarity with {len(all_jobs)} jobs using 3 embeddings...")
@@ -185,12 +196,20 @@ class TwoTowerMatchingService:
         all_field_similarities = []
         
         for job in all_jobs:
-            # Encode job into 3 embeddings
-            job_embs = self._encode_job_fields(
-                title=job.title or "",
-                skills=job.skills,
-                requirement=job.requirement
-            )
+            # Use embeddings from Job if available, otherwise encode
+            if job.title_embedding and job.skills_embedding and job.requirement_embedding:
+                job_embs = {
+                    'title': np.array(job.title_embedding, dtype=np.float32),
+                    'skills': np.array(job.skills_embedding, dtype=np.float32),
+                    'requirement': np.array(job.requirement_embedding, dtype=np.float32)
+                }
+            else:
+                # Encode job into 3 embeddings
+                job_embs = self._encode_job_fields(
+                    title=job.title or "",
+                    skills=", ".join([r.requirement for r in job.requirements if r.requirement]) if job.requirements else None,
+                    requirement="\n".join([r.requirement for r in job.requirements if r.requirement]) if job.requirements else None
+                )
             
             # Compute field similarities
             field_sims = self._compute_field_similarities(candidate_embs, job_embs)
@@ -215,10 +234,12 @@ class TwoTowerMatchingService:
             score = all_scores[idx]
             field_sims = all_field_similarities[idx]['field_similarities']
             
+            # Company name not available - Job model doesn't have Company relationship
+            # Only companyId is stored, but Company table may not exist
             results.append({
-                'job_id': job.job_id,
+                'job_id': job.id,
                 'title': job.title,
-                'company': job.company,
+                'company': None,  # Company name not available in current schema
                 'location': job.location,
                 'score': score,
                 'field_scores': {
@@ -249,38 +270,55 @@ class TwoTowerMatchingService:
         logger.info(f"Two-Tower matching (3 embeddings) for job: {job_id}")
         
         # Get job from database
-        job = self.repository.get_job(job_id)
+        job = self.job_repository.get_job(job_id)
         if not job:
             logger.error(f"Job {job_id} not found")
             return []
         
-        # Encode job into 3 embeddings
-        logger.info("Encoding job into 3 embeddings...")
-        job_embs = self._encode_job_fields(
-            title=job.title or "",
-            skills=job.skills,
-            requirement=job.requirement
-        )
+        # Use embeddings from Job if available, otherwise encode
+        if job.title_embedding and job.skills_embedding and job.requirement_embedding:
+            logger.info("Using pre-computed embeddings from Job...")
+            job_embs = {
+                'title': np.array(job.title_embedding, dtype=np.float32),
+                'skills': np.array(job.skills_embedding, dtype=np.float32),
+                'requirement': np.array(job.requirement_embedding, dtype=np.float32)
+            }
+        else:
+            # Encode job into 3 embeddings
+            logger.info("Encoding job into 3 embeddings...")
+            job_embs = self._encode_job_fields(
+                title=job.title or "",
+                skills=", ".join([r.requirement for r in job.requirements if r.requirement]) if job.requirements else None,
+                requirement="\n".join([r.requirement for r in job.requirements if r.requirement]) if job.requirements else None
+            )
         
-        # Get all candidates
-        all_candidates = self.repository.get_all_candidates()
+        # Get all CVs
+        all_cvs = self.cv_repository.get_all_cvs()
         if not all_candidates:
             logger.warning("No candidates found in database")
             return []
         
-        logger.info(f"Computing similarity with {len(all_candidates)} candidates using 3 embeddings...")
+        logger.info(f"Computing similarity with {len(all_cvs)} CVs using 3 embeddings...")
         
-        # Compute similarities for all candidates
+        # Compute similarities for all CVs
         all_scores = []
         all_field_similarities = []
         
-        for candidate in all_candidates:
-            # Encode candidate into 3 embeddings
-            candidate_embs = self._encode_candidate_fields(
-                title=candidate.title,
-                skills=candidate.skills,
-                experience=candidate.experience
-            )
+        for cv in all_cvs:
+            # Use embeddings from CV if available, otherwise encode
+            if cv.title_embedding and cv.skills_embedding and cv.experience_embedding:
+                candidate_embs = {
+                    'title': np.array(cv.title_embedding, dtype=np.float32),
+                    'skills': np.array(cv.skills_embedding, dtype=np.float32),
+                    'experience': np.array(cv.experience_embedding, dtype=np.float32)
+                }
+            else:
+                # Encode candidate into 3 embeddings
+                candidate_embs = self._encode_candidate_fields(
+                    title=cv.title,
+                    skills=", ".join([s.skillName for s in cv.skills]) if cv.skills else None,
+                    experience="\n".join([we.description for we in cv.work_experiences if we.description]) if cv.work_experiences else None
+                )
             
             # Compute field similarities
             field_sims = self._compute_field_similarities(candidate_embs, job_embs)
@@ -290,7 +328,7 @@ class TwoTowerMatchingService:
             
             all_scores.append(combined_score)
             all_field_similarities.append({
-                'candidate': candidate,
+                'candidate': cv,
                 'field_similarities': field_sims
             })
         
@@ -301,14 +339,14 @@ class TwoTowerMatchingService:
         # Format results
         results = []
         for idx in top_indices:
-            candidate = all_field_similarities[idx]['candidate']
+            cv = all_field_similarities[idx]['candidate']
             score = all_scores[idx]
             field_sims = all_field_similarities[idx]['field_similarities']
             
             results.append({
-                'candidate_id': candidate.candidate_id,
-                'name': candidate.name,
-                'email': candidate.email,
+                'candidate_id': cv.id,
+                'name': cv.fullName,
+                'email': cv.email,
                 'score': score,
                 'field_scores': {
                     'title': field_sims['title'],
